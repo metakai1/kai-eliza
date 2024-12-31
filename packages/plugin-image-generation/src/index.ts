@@ -112,6 +112,8 @@ const imageGeneration: Action = {
         },
         callback: HandlerCallback
     ) => {
+        elizaLogger.info("state messages", state.recentMessages);
+
         elizaLogger.log("Composing state for message:", message);
         state = (await runtime.composeState(message)) as State;
         const userId = runtime.agentId;

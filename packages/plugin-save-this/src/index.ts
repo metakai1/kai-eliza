@@ -27,7 +27,7 @@ const saveThisAction: Action = {
     ) => {
         try {
 
-            elizaLogger.info(state);
+            elizaLogger.info(state.recentMessages);
 
             // Only proceed if explicitly requested via state
             if (!state?.shouldSave) {
@@ -128,14 +128,14 @@ export const saveThisProvider: Provider = {
         // Trigger if message starts with "save this"
         if (text.trim().startsWith('save this')) {
             // Modify state in place first
-            if (state) {
+/*             if (state) {
                 state.shouldSave = true;
             }
 
             if(!state.shouldSave) {
                 elizaLogger.error('saveThisProvider: state.shouldSave is faised');
             }
-
+ */
             // Then trigger the SAVE_THIS action
             await runtime.processActions(message, [{
                 id: stringToUuid(`save_this_response_${Date.now()}`),
