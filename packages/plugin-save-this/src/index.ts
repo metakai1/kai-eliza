@@ -94,7 +94,7 @@ ${recentMessagesText}`,
                 await callback({
                     text: `I've stored the information for you`,
                     type: "text"
-                },
+                }, []);
             }
 
         } catch (error) {
