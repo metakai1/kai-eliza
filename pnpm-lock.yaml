@@ -14,6 +14,9 @@ importers:
       '@0glabs/0g-ts-sdk':
         specifier: 0.2.1
         version: 0.2.1(bufferutil@4.0.8)(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
+      '@ai16z/plugin-unreal':
+        specifier: workspace:*
+        version: link:packages/plugin-unreal
       '@coinbase/coinbase-sdk':
         specifier: 0.10.0
         version: 0.10.0(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8)
@@ -1721,6 +1724,21 @@ importers:
       '@types/dompurify':
         specifier: 3.2.0
         version: 3.2.0
+
+  packages/plugin-unreal:
+    dependencies:
+      '@ai16z/adapter-postgres':
+        specifier: workspace:*
+        version: link:../adapter-postgres
+      '@ai16z/eliza':
+        specifier: workspace:*
+        version: link:../core
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.1(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.6.3)(yaml@2.6.1)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
 
   packages/plugin-video-generation:
     dependencies:
