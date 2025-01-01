@@ -9,6 +9,8 @@ import {
     DEFAULT_MATCH_THRESHOLD
 } from "./types";
 
+const LAND_MEMORY_TYPE = 'land_plot';
+
 export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
     constructor(connectionConfig: any) {
         super(connectionConfig);
@@ -20,22 +22,39 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
     }
 
     async createLandMemory(memory: LandPlotMemory): Promise<void> {
-        await this.createMemory(memory, LAND_TABLE);
+        await this.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
 
     async getLandMemoryById(id: UUID): Promise<LandPlotMemory | undefined> {
-        const memory = await super.getMemoryById(id);
+        const memory = await super.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
         if (!memory) return undefined;
         return memory as LandPlotMemory;
     }
 
+    async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
+        const memories = await this.getMemories({
+            roomId,
+            tableName: LAND_MEMORY_TYPE,
+            dbTable: LAND_TABLE
+        });
+        return memories as LandPlotMemory[];
+    }
+
+    async removeLandMemory(memoryId: UUID): Promise<void> {
+        await this.removeMemory(memoryId, LAND_MEMORY_TYPE, LAND_TABLE);
+    }
+
+    async removeAllLandMemories(roomId: UUID): Promise<void> {
+        await this.removeAllMemories(roomId, LAND_MEMORY_TYPE, LAND_TABLE);
+    }
+
     async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
         let sql = `
-            SELECT * FROM memories
+            SELECT * FROM ${LAND_TABLE}
             WHERE type = $1
             AND content IS NOT NULL
         `;
-        const values: any[] = [LAND_TABLE];
+        const values: any[] = [LAND_MEMORY_TYPE];
         let paramCount = 1;
 
         if (params.neighborhoods?.length) {
@@ -122,10 +141,11 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
         similarity_threshold: number = DEFAULT_MATCH_THRESHOLD
     ): Promise<LandPlotMemory[]> {
         const semanticResults = await this.searchMemoriesByEmbedding(embedding, {
-            tableName: LAND_TABLE,
+            tableName: LAND_MEMORY_TYPE,
             roomId: LAND_ROOM_ID,
             agentId: LAND_AGENT_ID,
-            match_threshold: similarity_threshold
+            match_threshold: similarity_threshold,
+            dbTable: LAND_TABLE
         });
 
         if (Object.keys(metadata).length === 0) {
