@@ -128,6 +128,7 @@ describe('Land Plot Database Operations', () => {
 
             expect(results.length).toBeGreaterThan(0);
             results.forEach(result => {
+                console.log(result.content.metadata);
                 expect(result.content.metadata.neighborhood).toBe('Coastal District');
                 expect(result.content.metadata.plotSize).toBe(PlotSize.Large);
                 expect(result.content.metadata.distances.ocean.meters).toBeLessThanOrEqual(200);

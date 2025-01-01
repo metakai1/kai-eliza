@@ -293,6 +293,7 @@ export class PostgresDatabaseAdapter
                 .map((_, i) => `$${i + 2}`)
                 .join(", ");
 
+            // TODO: add a table name to the query
             let query = `SELECT * FROM memories WHERE type = $1 AND "roomId" IN (${placeholders})`;
             let queryParams = [params.tableName, ...params.roomIds];
 

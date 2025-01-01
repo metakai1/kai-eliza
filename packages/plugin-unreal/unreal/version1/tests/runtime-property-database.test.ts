@@ -12,21 +12,22 @@ import {
     LAND_ROOM_ID,
     LAND_AGENT_ID
 } from "../types";
-import { stringToUuid } from "@ai16z/eliza";
+import { stringToUuid, ModelProviderName, MemoryManager,embed } from "@ai16z/eliza";
 import { printLandMemory } from "../logging";
 
 describe('Land Plot Database Operations', () => {
+    let runtime: any;
     let db: LandDatabaseAdapter;
     let memorySystem: LandMemorySystem;
 
     // Mock embedder for testing
-    const mockEmbedder = {
+/*     const mockEmbedder = {
         embedText: async (text: string) => {
             return new Array(1536).fill(0); // Mock embedding vector
         }
     };
 
-    beforeAll(async () => {
+ */    beforeAll(async () => {
         // Initialize database
         db = new LandDatabaseAdapter({
             connectionString: process.env.POSTGRES_URL || 'postgresql://postgres:postgres@localhost:5432/test',
@@ -37,8 +38,35 @@ describe('Land Plot Database Operations', () => {
 
         await db.init();
 
-        // Initialize memory system
-        memorySystem = new LandMemorySystem(db, mockEmbedder);
+        const embedder = new OpenAIEmbedder({
+            apiKey: process.env.OPENAI_API_KEY!,
+            model: "text-embedding-ada-002"
+        });
+
+        // Create runtime with real database adapter
+        runtime = {
+            agentId: LAND_AGENT_ID,
+            serverUrl: 'http://localhost:3000',
+            databaseAdapter: db,
+            token: process.env.OPENAI_API_KEY,
+            modelProvider: 'openai' as ModelProviderName,
+            character: {
+                modelProvider: 'openai',
+                modelEndpointOverride: process.env.OPENAI_API_ENDPOINT,
+            },
+            messageManager: {
+                getCachedEmbeddings: async () => [],
+            },
+            memoryManager: new MemoryManager({ tableName: 'memories', runtime }),
+            documentsManager: new MemoryManager({ tableName: 'documents', runtime }),
+            knowledgeManager: new MemoryManager({ tableName: 'knowledge', runtime }),
+            getCachedEmbeddings: async () => {
+                return new Float32Array(1536).fill(0);
+            },
+        };
+
+        // Initialize memory system with real embedder
+        memorySystem = new LandMemorySystem(db, embedder);
     });
 
     afterAll(async () => {
