@@ -1,5 +1,4 @@
 # @ai16z/plugin-save-this
-# saveThisPlugin
 
 A plugin for Eliza that enables saving information from conversations as knowledge records.
 
@@ -24,6 +23,9 @@ pnpm add @ai16z/plugin-save-this
 ```typescript
 import { saveThisPlugin } from '@ai16z/plugin-save-this';
 
+// Register the plugin
+eliza.use(saveThisPlugin);
+```
 
 2. Use in conversation:
 
@@ -36,11 +38,11 @@ Eliza: "I've stored the information for you"
 
 No additional configuration is required. The plugin uses Eliza's built-in knowledge storage system.
 
-### Triggering and use of State.
+## Triggering and Use of State
 
-Instead of an ACTION based trigger, the plugin uses the Provider to monitor for an explicit "save this" keyphrase at the beginning of a message.  A typical action based trigger is not used, because I found that when multiple SAVE_MEMORY requests are done, eventually the LLM decides to start saving all messages to memory, and that is probably not what we want to do.
+Instead of an ACTION based trigger, the plugin uses the Provider to monitor for an explicit "save this" keyphrase at the beginning of a message. A typical action based trigger is not used, because when multiple SAVE_MEMORY requests are done, eventually the LLM decides to start saving all messages to memory, which is not the desired behavior.
 
-If the "save this" keyphrase is found, the Provider will set a state variable to allow the action to proceed.  So if the SAVE_THIS action is somehow triggered in another way, the handler aborts.
+If the "save this" keyphrase is found, the Provider will set a state variable to allow the action to proceed. If the SAVE_THIS action is somehow triggered in another way, the handler aborts.
 
 ## License
 
