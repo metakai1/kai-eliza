@@ -15,11 +15,6 @@ import {
 import { stringToUuid } from "@ai16z/eliza";
 import { printLandMemory } from "../logging";
 
-console.log('Environment settings:', {
-    USE_OPENAI_EMBEDDING: process.env.USE_OPENAI_EMBEDDING,
-    EMBEDDING_OPENAI_MODEL: process.env.EMBEDDING_OPENAI_MODEL,
-});
-
 describe('Land Plot Database Operations', () => {
     let db: LandDatabaseAdapter;
     let memorySystem: LandMemorySystem;
@@ -34,7 +29,7 @@ describe('Land Plot Database Operations', () => {
     beforeAll(async () => {
         // Initialize database
         db = new LandDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL,
+            connectionString: process.env.POSTGRES_URL || 'postgresql://postgres:postgres@localhost:5432/test',
             max: 20,
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 2000,
