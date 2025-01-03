@@ -68,10 +68,13 @@ export interface LandPlotMemory extends Memory {
     content: {
         text: string;
         metadata: LandPlotMetadata;
+        source?: UUID;  // Optional source UUID to track origin of fragments
     };
 }
 
 export interface LandSearchParams {
+    roomId?: UUID;
+    agentId?: UUID;
     neighborhoods?: string[];
     zoningTypes?: ZoningType[];
     plotSizes?: PlotSize[];
@@ -104,10 +107,18 @@ export interface LandSearchParams {
     };
 }
 
+export interface LandKnowledgeItem {
+    id: UUID;
+    content: {
+        text: string;
+        metadata: any;
+    };
+}
+
 // Constants
 export const AGENT_ID: `${string}-${string}-${string}-${string}-${string}` = '1459b245-2171-02f6-b436-c3c2641848e5';
 export const LAND_TABLE = 'land_table';
 export const LAND_ROOM_ID = AGENT_ID;
 export const LAND_AGENT_ID = AGENT_ID;
-export const DEFAULT_MATCH_THRESHOLD = 0.75;
+export const DEFAULT_MATCH_THRESHOLD = 0.4;
 export const DEFAULT_MATCH_COUNT = 20;

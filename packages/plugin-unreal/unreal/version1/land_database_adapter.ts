@@ -22,6 +22,7 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
     }
 
     async createLandMemory(memory: LandPlotMemory): Promise<void> {
+        console.log("Creating land memory with :", memory.embedding);
         await this.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
 
@@ -134,8 +135,7 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
             throw error;
         }
     }
-
-    async searchLandByCombinedCriteria(
+    async searchLandByEmbedding(
         embedding: number[],
         metadata: Partial<LandSearchParams>,
         similarity_threshold: number = DEFAULT_MATCH_THRESHOLD
@@ -147,14 +147,40 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
             match_threshold: similarity_threshold,
             dbTable: LAND_TABLE
         });
+         return semanticResults as LandPlotMemory[];
+    }
+
+    async searchLandByCombinedCriteria(
+        embedding: number[],
+        metadata: Partial<LandSearchParams>,
+        similarity_threshold: number = DEFAULT_MATCH_THRESHOLD
+
+    ): Promise<LandPlotMemory[]> {
+        const semanticResults = await this.searchMemoriesByEmbedding(embedding, {
+            tableName: LAND_MEMORY_TYPE,
+            roomId: LAND_ROOM_ID,
+            agentId: LAND_AGENT_ID,
+            match_threshold: similarity_threshold,
+            dbTable: LAND_TABLE
+        });
+
+        console.log('searchLandByCombinedCriteria Semantic Results:', semanticResults);
+
 
         if (Object.keys(metadata).length === 0) {
             return semanticResults as LandPlotMemory[];
         }
 
-        const metadataResults = await this.searchLandByMetadata(metadata);
+        console.log('searchLandByCombinedCriteria Metadata:', metadata);
+        const metadataResults = await this.searchLandByMetadata({
+            ...metadata,
+            roomId: LAND_ROOM_ID,
+            agentId: LAND_AGENT_ID
+        });
+
         const semanticIds = new Set(semanticResults.map(r => r.id));
-        return metadataResults.filter(r => semanticIds.has(r.id));
+        const filteredResults = metadataResults.filter(r => semanticIds.has(r.id));
+        return filteredResults;
     }
 
     async getPropertiesByRarityRange(

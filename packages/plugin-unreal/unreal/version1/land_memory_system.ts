@@ -1,7 +1,8 @@
-import { elizaLogger, UUID, stringToUuid } from "@ai16z/eliza";
+import { elizaLogger, UUID, stringToUuid, splitChunks } from "@ai16z/eliza";
 import { LandDatabaseAdapter } from "./land_database_adapter";
-import { LandPlotMemory, LandSearchParams, DEFAULT_MATCH_COUNT } from "./types";
+import { LandPlotMemory, LandSearchParams, DEFAULT_MATCH_COUNT, LandKnowledgeItem } from "./types";
 import { LAND_ROOM_ID, LAND_AGENT_ID, AGENT_ID } from "./types";
+import { v4 as uuidv4 } from 'uuid';
 
 export const LAND_QUERY_SYSTEM_PROMPT = `
 You are a real estate search assistant for a futuristic city. Convert natural language queries into structured search parameters.
@@ -101,6 +102,34 @@ export class LandMemorySystem {
         }
     }
 
+    async searchPropertiesSimple(
+        query: string,
+        metadata: Partial<LandSearchParams> = {},
+        limit: number = DEFAULT_MATCH_COUNT
+    ): Promise<LandPlotMemory[]> {
+        try {
+
+            console.log('Search query:', query);
+            const embedding = await this.embedder.embedText(query);
+
+            console.log('Search query embedding:', embedding);
+
+            const results = await this.database.searchLandByEmbedding(
+                embedding,
+                metadata
+            );
+            console.log('Search results:', results);
+            return results.slice(0, limit);
+        } catch (error) {
+            elizaLogger.error('Error searching properties:', {
+                error: error instanceof Error ? error.message : String(error),
+                query,
+                metadata
+            });
+            throw error;
+        }
+    }
+
     /**
      * Search for properties using natural language query and metadata filters
      */
@@ -110,7 +139,12 @@ export class LandMemorySystem {
         limit: number = DEFAULT_MATCH_COUNT
     ): Promise<LandPlotMemory[]> {
         try {
+
+            //console.log('Search query:', query);
             const embedding = await this.embedder.embedText(query);
+
+            //console.log('Search query embedding:', embedding);
+
             const results = await this.database.searchLandByCombinedCriteria(
                 embedding,
                 metadata
@@ -145,5 +179,71 @@ export class LandMemorySystem {
             });
             throw error;
         }
+    }
+
+    /**
+     * Creates a land memory and its fragments from a knowledge item
+     */
+    async setLandKnowledge(
+        item: LandKnowledgeItem,
+        chunkSize: number = 512,
+        bleed: number = 20
+    ): Promise<UUID> {
+        try {
+            // First create the main land memory
+            const mainMemory: LandPlotMemory = {
+                id: item.id,
+                userId: LAND_AGENT_ID,
+                agentId: LAND_AGENT_ID,
+                roomId: LAND_ROOM_ID,
+                content: item.content,
+                embedding: await this.embedder.embedText(item.content.text)
+            };
+            await this.database.createLandMemory(mainMemory);
+
+            // Then split into fragments if needed
+            const preprocessed = item.content.text;
+            const fragments = await splitChunks(preprocessed, chunkSize, bleed);
+
+            // Create fragment memories
+            let fragmentCounter = 0;
+            for (const fragment of fragments) {
+                fragmentCounter++;
+                const fragmentMemory: LandPlotMemory = {
+                    id: stringToUuid(`${item.id}-fragment-${fragmentCounter}`),
+                    userId: LAND_AGENT_ID,
+                    agentId: LAND_AGENT_ID,
+                    roomId: LAND_ROOM_ID,
+                    content: {
+                        text: fragment,
+                        metadata: item.content.metadata, // Keep the same metadata
+                        source: item.id
+                    },
+                    embedding: await this.embedder.embedText(fragment)
+        };
+                console.log("fragment memory text:", fragmentMemory.content.text);
+                await this.database.createLandMemory(fragmentMemory);
+                console.log("Fragment memory embedding:", fragmentMemory.embedding);
+            }
+        return item.id;
+        } catch (error) {
+            elizaLogger.error('Error setting land knowledge:', {
+                error: error instanceof Error ? error.message : String(error),
+                item
+            });
+            throw error;
+        }
+    }
+
+    async getLandKnowledgeById(id: UUID): Promise<LandKnowledgeItem | undefined> {
+        const memory = await this.database.getLandMemoryById(id);
+        if (!memory) return undefined;
+
+        return {
+            id: memory.id,
+            content: memory.content,
+ //           text: memory.text,
+  //          metadata: memory.metadata
+        };
     }
 }
