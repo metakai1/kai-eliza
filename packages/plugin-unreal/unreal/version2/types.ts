@@ -75,6 +75,7 @@ export interface LandPlotMemory extends Memory {
 export interface LandSearchParams {
     roomId?: UUID;
     agentId?: UUID;
+    names?: string[];
     neighborhoods?: string[];
     zoningTypes?: ZoningType[];
     plotSizes?: PlotSize[];
@@ -120,5 +121,6 @@ export const AGENT_ID: `${string}-${string}-${string}-${string}-${string}` = '14
 export const LAND_TABLE = 'land_table';
 export const LAND_ROOM_ID = AGENT_ID;
 export const LAND_AGENT_ID = AGENT_ID;
+export const LAND_USER_ID = AGENT_ID;
 export const DEFAULT_MATCH_THRESHOLD = 0.4;
 export const DEFAULT_MATCH_COUNT = 20;

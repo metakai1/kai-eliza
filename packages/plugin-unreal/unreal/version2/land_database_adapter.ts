@@ -137,7 +137,6 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
     }
     async searchLandByEmbedding(
         embedding: number[],
-        metadata: Partial<LandSearchParams>,
         similarity_threshold: number = DEFAULT_MATCH_THRESHOLD
     ): Promise<LandPlotMemory[]> {
         const semanticResults = await this.searchMemoriesByEmbedding(embedding, {

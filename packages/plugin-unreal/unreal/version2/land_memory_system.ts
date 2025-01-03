@@ -1,6 +1,6 @@
 import { elizaLogger, UUID, stringToUuid, splitChunks } from "@ai16z/eliza";
 import { LandDatabaseAdapter } from "./land_database_adapter";
-import { LandPlotMemory, LandSearchParams, DEFAULT_MATCH_COUNT, LandKnowledgeItem } from "./types";
+import { LandPlotMemory, LandSearchParams, DEFAULT_MATCH_COUNT, LandKnowledgeItem, LandPlotMetadata } from "./types";
 import { LAND_ROOM_ID, LAND_AGENT_ID, AGENT_ID } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -26,6 +26,10 @@ Keep the searchText natural and descriptive while being specific about requireme
 `;
 
 export class LandMemorySystem {
+    private readonly roomId: UUID = LAND_ROOM_ID; // TODO: Make this dynamic
+    private readonly agentId: UUID = LAND_AGENT_ID;
+    private readonly userId: UUID = AGENT_ID;
+
     constructor(
         private readonly database: LandDatabaseAdapter,
         private readonly embedder: {
@@ -33,66 +37,44 @@ export class LandMemorySystem {
         }
     ) {}
 
-    /**
-     * Converts a CSV row into a natural language description for embedding
-     */
-    private generatePlotDescription(plot: any): string {
-        return `${plot.Name} is a ${plot['Plot Size']} ${plot['Zoning Type']} plot in ${plot.Neighborhood}. ` +
-               `It is a ${plot['Building Size']} building with ${plot['Min # of Floors']} to ${plot['Max # of Floors']} floors. ` +
-               `The plot area is ${plot['Plot Area (m²)']}m² with building heights from ${plot['Min Building Height (m)']}m to ${plot['Max Building Height (m)']}m. ` +
-               `Located ${plot['Distance to Ocean']} from ocean (${plot['Distance to Ocean (m)']}m) and ${plot['Distance to Bay']} from bay (${plot['Distance to Bay (m)']}m).`;
+    // create function to remove all LandMemories
+    async removeAllLandMemories(): Promise<void> {
+        await this.database.removeAllLandMemories(LAND_ROOM_ID);
     }
-
-    /**
-     * Create a new land memory from CSV data
-     */
 
     async createLandMemoryFromCSV(csvRow: any): Promise<void> {
         try {
-            const description = this.generatePlotDescription(csvRow);
-            const embedding = await this.embedder.embedText(description);
-
-            const memory: LandPlotMemory = {
-                id: stringToUuid(`description`),  // TODO FIX THIS
-                userId:  LAND_AGENT_ID,  // Since this is a system-generated memory
-                agentId: LAND_AGENT_ID,
-                roomId: LAND_ROOM_ID,
-                content: {
-                    text: description,
-                    metadata: {
-                        rank: parseInt(csvRow['Rank']),
-                        name: csvRow['Name'],
-                        neighborhood: csvRow['Neighborhood'],
-                        zoning: csvRow['Zoning Type'],
-                        plotSize: csvRow['Plot Size'],
-                        buildingType: csvRow['Building Size'],
-                        distances: {
-                            ocean: {
-                                meters: parseInt(csvRow['Distance to Ocean (m)']),
-                                category: csvRow['Distance to Ocean']
-                            },
-                            bay: {
-                                meters: parseInt(csvRow['Distance to Bay (m)']),
-                                category: csvRow['Distance to Bay']
-                            }
-                        },
-                        building: {
-                            floors: {
-                                min: parseInt(csvRow['Min # of Floors']),
-                                max: parseInt(csvRow['Max # of Floors'])
-                            },
-                            height: {
-                                min: parseFloat(csvRow['Min Building Height (m)']),
-                                max: parseFloat(csvRow['Max Building Height (m)'])
-                            }
-                        },
-                        plotArea: parseFloat(csvRow['Plot Area (m²)'])
+            const metadata: LandPlotMetadata = {
+                rank: parseInt(csvRow['Rank']),
+                name: csvRow['Name'],
+                neighborhood: csvRow['Neighborhood'],
+                zoning: csvRow['Zoning Type'],
+                plotSize: csvRow['Plot Size'],
+                buildingType: csvRow['Building Size'],
+                distances: {
+                    ocean: {
+                        meters: parseInt(csvRow['Distance to Ocean (m)']),
+                        category: csvRow['Distance to Ocean']
+                    },
+                    bay: {
+                        meters: parseInt(csvRow['Distance to Bay (m)']),
+                        category: csvRow['Distance to Bay']
                     }
                 },
-                embedding
+                building: {
+                    floors: {
+                        min: parseInt(csvRow['Min # of Floors']),
+                        max: parseInt(csvRow['Max # of Floors'])
+                    },
+                    height: {
+                        min: parseFloat(csvRow['Min Building Height (m)']),
+                        max: parseFloat(csvRow['Max Building Height (m)'])
+                    }
+                },
+                plotArea: parseFloat(csvRow['Plot Area (m²)'])
             };
 
-            await this.database.createLandMemory(memory);
+            await this.storeProperty(metadata);
         } catch (error) {
             elizaLogger.error('Error creating land memory:', {
                 error: error instanceof Error ? error.message : String(error),
@@ -102,7 +84,7 @@ export class LandMemorySystem {
         }
     }
 
-    async searchPropertiesSimple(
+    async searchPropertiesByQuery(
         query: string,
         metadata: Partial<LandSearchParams> = {},
         limit: number = DEFAULT_MATCH_COUNT
@@ -115,8 +97,7 @@ export class LandMemorySystem {
             console.log('Search query embedding:', embedding);
 
             const results = await this.database.searchLandByEmbedding(
-                embedding,
-                metadata
+                embedding
             );
             console.log('Search results:', results);
             return results.slice(0, limit);
@@ -130,34 +111,9 @@ export class LandMemorySystem {
         }
     }
 
-    /**
-     * Search for properties using natural language query and metadata filters
-     */
-    async searchProperties(
-        query: string,
-        metadata: Partial<LandSearchParams> = {},
-        limit: number = DEFAULT_MATCH_COUNT
-    ): Promise<LandPlotMemory[]> {
-        try {
-
-            //console.log('Search query:', query);
-            const embedding = await this.embedder.embedText(query);
-
-            //console.log('Search query embedding:', embedding);
-
-            const results = await this.database.searchLandByCombinedCriteria(
-                embedding,
-                metadata
-            );
-            return results.slice(0, limit);
-        } catch (error) {
-            elizaLogger.error('Error searching properties:', {
-                error: error instanceof Error ? error.message : String(error),
-                query,
-                metadata
-            });
-            throw error;
-        }
+    async searchPropertiesByParams(searchParams: Partial<LandSearchParams> = {}): Promise<LandPlotMemory[]> {
+        const results = await this.database.searchLandByMetadata(searchParams);
+        return results;
     }
 
     /**
@@ -181,10 +137,7 @@ export class LandMemorySystem {
         }
     }
 
-    /**
-     * Creates a land memory and its fragments from a knowledge item
-     */
-    async setLandKnowledge(
+    async storePropertyItem(
         item: LandKnowledgeItem,
         chunkSize: number = 512,
         bleed: number = 20
@@ -193,9 +146,117 @@ export class LandMemorySystem {
             // First create the main land memory
             const mainMemory: LandPlotMemory = {
                 id: item.id,
-                userId: LAND_AGENT_ID,
-                agentId: LAND_AGENT_ID,
-                roomId: LAND_ROOM_ID,
+                userId: this.userId,
+                agentId: this.agentId,
+                roomId: this.roomId,
+                content: item.content
+                //embedding: await this.embedder.embedText(item.content.text)
+            };
+            await this.database.createLandMemory(mainMemory);   
+            return item.id;
+        } catch (error) {
+            elizaLogger.error('Error setting land knowledge:', {
+                error: error instanceof Error ? error.message : String(error),
+                item
+            });
+            throw error;
+        }
+    }
+
+    async getLandKnowledgeById(id: UUID): Promise<LandKnowledgeItem | undefined> {
+        const memory = await this.database.getLandMemoryById(id);
+        if (!memory) return undefined;
+
+        return {
+            id: memory.id,
+            content: memory.content,
+ //           text: memory.text,
+ //         metadata: memory.metadata
+        };
+    }
+
+    async getPropertyDataById(id: UUID): Promise<LandPlotMemory | undefined> {
+        const result = await this.database.getLandMemoryById(id);
+        return result;
+    }
+
+    /**
+     * Stores a property in the land memory system
+     * @param metadata The land plot metadata to store
+     * @returns The UUID of the stored property
+     */
+    async storeProperty(metadata: LandPlotMetadata): Promise<UUID> {
+        const description = this.generatePropertyDescription(metadata);
+        const knowledgeItem: LandKnowledgeItem = {
+            id: stringToUuid(description+Date.now()),
+            content: {
+                text: description,
+                metadata: metadata
+            },
+        };
+
+        return await this.storePropertyItem(knowledgeItem);
+    }
+
+    /**
+     * Generates a natural language description of a property from its metadata
+     */
+    private generatePropertyDescription(metadata: LandPlotMetadata): string {
+        const description = `${metadata.name} is a ${metadata.plotSize} ${metadata.zoning} plot in ${metadata.neighborhood}. ` +
+            `It is located ${metadata.distances.ocean.meters}m from the ocean and ${metadata.distances.bay.meters}m from the bay. ` +
+            `The building can have between ${metadata.building.floors.min} and ${metadata.building.floors.max} floors, ` +
+            `with heights from ${metadata.building.height.min}m to ${metadata.building.height.max}m. ` +
+            `The plot area is ${metadata.plotArea}m².`;
+        return description;
+    }
+}
+
+    
+    /**
+     * Search for properties using natural language query and metadata filters
+     */
+/*     async searchProperties(
+        metadata: Partial<LandSearchParams> = {},
+        limit: number = DEFAULT_MATCH_COUNT
+    ): Promise<LandPlotMemory[]> {
+        try {
+            const constructedQuery = this.generateQueryFromMetadata(metadata);
+
+            //console.log('Search query:', query);
+            const embedding = await this.embedder.embedText(constructedQuery);
+
+            //console.log('Search query embedding:', embedding);
+
+            const results = await this.database.searchLandByCombinedCriteria(
+                embedding,
+                metadata
+            );
+            return results.slice(0, limit);
+        } catch (error) {
+            elizaLogger.error('Error searching properties:', {
+                error: error instanceof Error ? error.message : String(error),
+                query,
+                metadata
+            });
+            throw error;
+        }
+    } */
+
+        /**
+     * Creates a land memory and its fragments from a knowledge item
+/*      */
+ /*    async setLandKnowledge(
+        item: LandKnowledgeItem,
+        chunkSize: number = 512,
+        bleed: number = 20
+    ): Promise<UUID> {
+        try {
+            // First create the main land memory
+            const mainMemory: LandPlotMemory = {
+                id: item.id,
+                userId: this.userId,
+                agentId: this.agentId,
+                roomId: this.roomId,
                 content: item.content,
                 embedding: await this.embedder.embedText(item.content.text)
             };
@@ -234,16 +295,4 @@ export class LandMemorySystem {
             throw error;
         }
     }
-
-    async getLandKnowledgeById(id: UUID): Promise<LandKnowledgeItem | undefined> {
-        const memory = await this.database.getLandMemoryById(id);
-        if (!memory) return undefined;
-
-        return {
-            id: memory.id,
-            content: memory.content,
- //           text: memory.text,
-  //          metadata: memory.metadata
-        };
-    }
-}
+ */ 

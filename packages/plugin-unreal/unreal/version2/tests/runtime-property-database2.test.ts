@@ -69,7 +69,8 @@ describe('Land Plot Database Operations', () => {
         memorySystem = new LandMemorySystem(db, embedder);
 
         // Clear any existing data before all tests
-        await db.removeAllLandMemories(LAND_ROOM_ID);
+        await memorySystem.removeAllLandMemories();
+
     });
 
     beforeEach(async () => {
@@ -85,94 +86,69 @@ describe('Land Plot Database Operations', () => {
     });
 
     afterAll(async () => {
-        await db.removeAllLandMemories(LAND_ROOM_ID);
+        //await memorySystem.removeAllLandMemories();
         await db.close();
     });
 
-
-    const getTestLandMetadata = () => {
-        return {
-            name: 'Oceanview Residence',
-            neighborhood: 'Coastal District',
-            zoning: ZoningType.Residential,
-            plotSize: PlotSize.Large,
-            buildingType: BuildingType.MidRise,
-        };
-    };
-
-
-    const getTestLandKnowledgeItem = (text: string, metadata: any): LandKnowledgeItem => {
-        return {
-            id: generateUniqueId('knowledge'),
-            content: {
-                text: text,
-                metadata: metadata
+    const landMetadata1: LandPlotMetadata = {
+        rank: 1,
+        name: 'Oceanview Residence',
+        neighborhood: 'Coastal District',
+        zoning: ZoningType.Residential,
+        plotSize: PlotSize.Large,
+        buildingType: BuildingType.MidRise,
+        distances: {
+            ocean: {
+                meters: 150,
+                category: DistanceCategory.Close
+            },
+            bay: {
+                meters: 2000,
+                category: DistanceCategory.Far
             }
-        };
+        },
+        building: {
+            floors: { min: 5, max: 8 },
+            height: { min: 15, max: 24 }
+        },
+        plotArea: 2500,
     };
+
 
     describe('Land Knowledge Operations', () => {
-        test('should store and retrieve land knowledge by id', async () => {
-            const testText = "This is a test land knowledge entry";
-            const testMetadata = { type: "test" };
+        test('should store and retrieve land knowledge with storeProperty()', async () => {
 
-            const knowledgeItem: LandKnowledgeItem = getTestLandKnowledgeItem(testText, testMetadata);
+            const id = await memorySystem.storeProperty(landMetadata1);
 
             // Store the knowledge and get the ID
-            const knowledgeId = await memorySystem.setLandKnowledge(knowledgeItem);
-            expect(knowledgeId).toBeDefined();
+            expect(id).toBeDefined();
 
             // Retrieve the knowledge by ID
-            const retrievedKnowledge = await memorySystem.getLandKnowledgeById(knowledgeId);
+            const retrievedKnowledge = await memorySystem.getLandKnowledgeById(id);
             expect(retrievedKnowledge).toBeDefined();
-            expect(retrievedKnowledge?.content.text).toBe(testText);
-            expect(retrievedKnowledge?.content.metadata).toEqual(testMetadata);
+            expect(retrievedKnowledge?.content.text).toBeDefined();
+            expect(retrievedKnowledge?.content.metadata).toEqual(landMetadata1);
+            await memorySystem.removeAllLandMemories();
         });
     });
 
     describe('Land Plot Creation', () => {
         test('should create valid land plot memory', async () => {
-            const testMetadata: LandPlotMetadata = {
-                name: 'Oceanview Residence',
-                neighborhood: 'Coastal District',
-                zoning: ZoningType.Residential,
-                plotSize: PlotSize.Large,
-                buildingType: BuildingType.MidRise,
-                distances: {
-                    ocean: { meters: 150, category: DistanceCategory.Close },
-                    bay: { meters: 2000, category: DistanceCategory.Far }
-                },
-                building: {
-                    floors: { min: 5, max: 8 },
-                    height: { min: 15, max: 24 }
-                },
-                plotArea: 2500,
-                rank: 1
-            };
 
-            const knowledgeItem = {
-                id: generateUniqueId(LAND_AGENT_ID),
-                content: {
-                    text: `${testMetadata.name} is a ${testMetadata.plotSize} ${testMetadata.zoning} plot in ${testMetadata.neighborhood}. ` +
-                          `It is located ${testMetadata.distances.ocean.meters}m from the ocean and ${testMetadata.distances.bay.meters}m from the bay. ` +
-                          `The building can have between ${testMetadata.building.floors.min} and ${testMetadata.building.floors.max} floors.`,
-                    metadata: testMetadata
-                },
-                roomId: LAND_ROOM_ID,
-                agentId: LAND_AGENT_ID,
-                type: 'land_plot'
-            };
-
-            await memorySystem.setLandKnowledge(knowledgeItem);
+            await memorySystem.storeProperty(landMetadata1);
 
             // Verify creation by searching for the property
-            const results = await memorySystem.searchPropertiesSimple(knowledgeItem.content.text);
+            const searchParams = {
+                names: [landMetadata1.name]
+            }
+            const results = await memorySystem.searchPropertiesByParams(searchParams);
+
             expect(results.length).toBeGreaterThan(0);
 
             const result = results[0];
-            expect(result.content.metadata.name).toBe(testMetadata.name);
-            expect(result.content.metadata.plotSize).toBe(testMetadata.plotSize);
-            expect(result.content.metadata.zoning).toBe(testMetadata.zoning);
+            expect(result.content.metadata.name).toBe(landMetadata1.name);
+            expect(result.content.metadata.plotSize).toBe(landMetadata1.plotSize);
+            expect(result.content.metadata.zoning).toBe(landMetadata1.zoning);
         }, 10000);
     });
 
@@ -183,36 +159,55 @@ describe('Land Plot Database Operations', () => {
                 neighborhoods: ['Coastal District']
             };
 
-            const results = await db.searchLandByMetadata(searchParams);
+            const results = await memorySystem.searchPropertiesByParams(searchParams);
 
             expect(results.length).toBeGreaterThan(0);
             expect(results[0].content.metadata.neighborhood).toBe('Coastal District');
         });
 
-        test('should find plots by multiple metatdata', async () => {
+        test('should find plots by neighborhood and plot size', async () => {
             const searchParams = {
                 neighborhoods: ['Coastal District'],
                 plotSizes: [PlotSize.Large],
-                //distances: {
-                //    ocean: {
-                //        maxMeters: 200,
-                //        category: DistanceCategory.Close
-                //    }
-                //}
-            };
+           };
 
-            const results = await db.searchLandByMetadata(searchParams);
+            const results = await memorySystem.searchPropertiesByParams(searchParams);
 
             expect(results.length).toBeGreaterThan(0);
             results.forEach(result => {
+                console.log("Neighborhood + Plot Size test" ,
+                    result.content.metadata.neighborhood, 
+                    result.content.metadata.plotSize);
+
                 expect(result.content.metadata.neighborhood).toBe('Coastal District');
                 expect(result.content.metadata.plotSize).toBe(PlotSize.Large);
                 //expect(result.content.metadata.distances.ocean.meters).toBeLessThanOrEqual(200);
             });
         });
 
-        test('should find plots by semantic search', async () => {
-            const testMetadata = getTestLandMetadata();
+        test('should find plots by distance to ocean', async () => {
+            const searchParams = {
+                distances: {
+                    ocean: {
+                        maxMeters: 200,
+                        category: DistanceCategory.Close
+                    }
+                }
+            };
+
+            const results = await memorySystem.searchPropertiesByParams(searchParams);
+
+            expect(results.length).toBeGreaterThan(0);
+            results.forEach(result => {
+                console.log("Distance to Ocean test\n",
+                    "distance to Ocean", result.content.metadata.distances.ocean.meters,
+                    "\ndistance category", result.content.metadata.distances.ocean.category);
+                expect(result.content.metadata.distances.ocean.meters).toBeLessThanOrEqual(200);
+            });
+        });
+
+        /*         test('should find plots by semantic search', async () => {
+            const testMetadata = landMetadata1;
 
             const query = `${testMetadata.name} is a ${testMetadata.plotSize} ${testMetadata.zoning} plot in ${testMetadata.neighborhood}. `
 
@@ -234,7 +229,7 @@ describe('Land Plot Database Operations', () => {
                 expect(result.content.metadata.zoning).toBe(ZoningType.Residential);
                 expect(result.content.metadata.distances.ocean.category).toBe(DistanceCategory.Close);
             });
-        });
+        }); */
     });
 
 

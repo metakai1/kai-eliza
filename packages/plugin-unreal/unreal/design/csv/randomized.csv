@@ -1,0 +1,86 @@
+Rank,Name,Neighborhood,Zoning Type,Plot Size,Building Size,Distance to Ocean,Distance to Bay,Max # of Floors,Min # of Floors,Plot Area (m²),Min Building Height (m),Max Building Height (m),Distance to Ocean (m),Distance to Bay (m)
+44,SM-577,Space Mind,Mixed Use,Mega,Highrise,Far,Far,55,44,7169,222,277,830,742
+45,HH-878,Haven Heights,Industrial,Giga,Lowrise,Medium,Far,9,7,9363,36,45,383,673
+47,DZ-225,District ZERO,Industrial,Giga,Lowrise,Far,Far,8,6,10095,32,40,1006,1090
+51,NS-931,North Star,Mixed Use,Macro,Highrise,Medium,Far,46,37,5323,188,234,453,766
+54,FL-90,Flashing Lights,Mixed Use,Mid,Highrise,Far,Medium,52,42,4603,212,264,2536,302
+56,FL-99,Flashing Lights,Mixed Use,Mid,Highrise,Far,Far,45,36,4081,181,226,889,1077
+59,FL-133,Flashing Lights,Mixed Use,Mammoth,Lowrise,Far,Medium,19,16,7393,80,99,2709,361
+61,FL-161,Flashing Lights,Mixed Use,Mammoth,Lowrise,Far,Far,17,13,8021,69,86,616,1070
+64,FL-66,Flashing Lights,Mixed Use,Mini,Highrise,Medium,Far,50,40,2551,200,250,344,1335
+67,FL-47,Flashing Lights,Mixed Use,Mini,Highrise,Far,Far,49,39,3219,197,246,795,795
+73,NS-942,North Star,Mixed Use,Mini,Highrise,Medium,Far,48,38,2535,194,242,349,947
+77,DZ-40,District ZERO,Industrial,Mammoth,Lowrise,Far,Close,8,6,7266,32,40,2269,234
+81,DZ-115,District ZERO,Mixed Use,Mini,Highrise,Far,Far,57,45,2413,228,285,1319,670
+84,DZ-19,District ZERO,Industrial,Mammoth,Lowrise,Far,Medium,3,3,7443,15,18,1312,385
+88,SM-576,Space Mind,Industrial,Mammoth,Lowrise,Far,Far,9,7,7355,39,48,876,686
+90,DZ-234,District ZERO,Industrial,Mammoth,Lowrise,Far,Far,8,6,7215,32,40,1398,809
+95,NS-709,North Star,Industrial,Mammoth,Lowrise,Far,Far,14,11,7303,59,73,1769,654
+99,FL-21,Flashing Lights,Residential,Micro,Highrise,Far,Close,48,39,1594,195,243,2456,129
+102,FL-86,Flashing Lights,Mixed Use,Mega,Midrise,Far,Far,25,20,6233,100,125,993,973
+106,NS-833,North Star,Mixed Use,Mega,Midrise,Far,Close,30,24,7032,124,154,1491,219
+113,NX-11,Nexus,Commercial,Micro,Lowrise,Close,Far,4,3,1482,18,22,294,1063
+115,FL-45,Flashing Lights,Mixed Use,Macro,Midrise,Far,Medium,39,32,5202,160,199,1140,457
+122,NX-17,Nexus,Residential,Micro,Lowrise,Close,Far,4,3,1519,17,21,296,1070
+127,FL-126,Flashing Lights,Industrial,Mega,Lowrise,Far,Far,12,9,6193,48,60,1352,761
+133,DZ-169,District ZERO,Industrial,Mega,Lowrise,Medium,Far,8,6,6777,32,40,363,1429
+517,TG-5,Tranquility Gardens,Industrial,Mid,Lowrise,Far,Close,8,7,3790,36,44,3204,137
+521,TG-45,Tranquility Gardens,Industrial,Mid,Lowrise,Far,Close,9,7,3819,39,48,3219,244
+525,SM-440,Space Mind,Industrial,Mid,Lowrise,Far,Medium,8,6,3859,32,40,1763,387
+530,DZ-236,District ZERO,Industrial,Mid,Lowrise,Far,Medium,3,3,4543,15,18,1851,394
+539,NS-871,North Star,Industrial,Mid,Lowrise,Far,Close,11,9,3774,45,56,1608,114
+547,DZ-70,District ZERO,Industrial,Mid,Lowrise,Far,Far,9,8,4033,40,49,608,1135
+547,DZ-174,District ZERO,Industrial,Mid,Lowrise,Far,Far,8,6,4050,32,40,1160,761
+547,DZ-177,District ZERO,Industrial,Mid,Lowrise,Far,Far,9,7,3948,39,48,860,1007
+547,DZ-192,District ZERO,Industrial,Mid,Lowrise,Far,Far,15,12,4144,62,77,1442,611
+568,FL-121,Flashing Lights,Mixed Use,Micro,Lowrise,Far,Far,12,10,2156,50,62,1987,641
+571,NS-697,North Star,Industrial,Mid,Lowrise,Far,Medium,11,9,4300,47,58,2076,470
+576,FL-159,Flashing Lights,Industrial,Mini,Lowrise,Medium,Far,13,11,2706,55,68,318,1337
+583,NS-700,North Star,Industrial,Mid,Lowrise,Far,Far,10,8,4554,41,51,819,940
+591,FL-40,Flashing Lights,Industrial,Mini,Lowrise,Far,Close,15,12,2531,62,77,1859,221
+600,TG-306,Tranquility Gardens,Commercial,Mini,Lowrise,Far,Close,4,3,3199,16,20,4713,228
+809,SM-11,Space Mind,Industrial,Mini,Lowrise,Far,Far,8,6,3081,32,40,1547,694
+819,DZ-60,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3294,32,40,927,832
+819,DZ-62,District ZERO,Industrial,Mini,Lowrise,Far,Far,10,8,3169,41,51,781,963
+819,DZ-68,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3094,32,40,769,989
+819,DZ-75,District ZERO,Industrial,Mini,Lowrise,Far,Far,10,8,3003,44,54,834,967
+819,DZ-85,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,7,3153,35,43,1164,762
+819,DZ-86,District ZERO,Industrial,Mini,Lowrise,Far,Far,9,7,3048,36,45,1112,793
+819,DZ-88,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3059,32,40,877,960
+819,DZ-99,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2983,32,40,990,927
+819,DZ-117,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3041,32,40,914,1008
+819,DZ-118,District ZERO,Industrial,Mini,Lowrise,Far,Far,9,8,3395,40,49,772,1105
+819,DZ-124,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3218,32,40,1206,724
+819,DZ-125,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3223,32,40,1150,781
+819,DZ-127,District ZERO,Industrial,Mini,Lowrise,Far,Far,12,10,2571,52,64,777,1158
+819,DZ-129,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,3279,33,41,1190,713
+819,DZ-150,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2907,32,40,628,1156
+819,DZ-153,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2727,33,41,1251,601
+819,DZ-161,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2859,32,40,810,995
+819,DZ-163,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2771,32,40,1241,629
+819,DZ-184,District ZERO,Industrial,Mini,Lowrise,Far,Far,14,11,2455,56,70,1354,661
+819,DZ-185,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,6,2458,32,40,1295,704
+819,DZ-187,District ZERO,Industrial,Mini,Lowrise,Far,Far,8,7,3085,36,44,855,1051
+819,DZ-199,District ZERO,Industrial,Mini,Lowrise,Far,Far,10,8,3233,44,54,1136,861
+864,LM-109,Little Meow,Commercial,Nano,Lowrise,Far,Close,4,3,1031,16,20,1956,275
+864,LM-118,Little Meow,Commercial,Nano,Lowrise,Far,Close,2,2,1024,12,14,1837,292
+864,LM-120,Little Meow,Commercial,Nano,Lowrise,Far,Close,4,3,1054,16,20,1910,220
+864,LM-123,Little Meow,Commercial,Nano,Lowrise,Far,Close,5,4,1075,23,28,1866,224
+864,LM-128,Little Meow,Commercial,Nano,Lowrise,Far,Close,4,3,1037,16,20,1798,236
+864,LM-132,Little Meow,Commercial,Nano,Lowrise,Far,Close,7,5,742,29,36,1834,145
+864,LM-137,Little Meow,Commercial,Nano,Lowrise,Far,Close,5,4,773,23,28,1747,146
+864,LM-139,Little Meow,Commercial,Nano,Lowrise,Far,Close,6,5,740,25,31,1811,118
+864,LM-140,Little Meow,Commercial,Nano,Lowrise,Far,Close,4,3,744,17,21,1774,116
+864,LM-145,Little Meow,Commercial,Nano,Lowrise,Far,Close,4,4,484,20,24,1753,91
+1024,LM-121,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,1086,16,20,1899,223
+1024,LM-122,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,1078,19,23,1877,227
+1024,LM-124,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,1052,16,20,1855,222
+1024,LM-125,Little Meow,Residential,Nano,Lowrise,Far,Close,5,4,1012,24,29,1827,225
+1024,LM-126,Little Meow,Residential,Nano,Lowrise,Far,Close,4,4,1044,20,24,1817,227
+1024,LM-127,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,1040,16,20,1807,232
+1024,LM-129,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,1033,17,21,1788,237
+1024,LM-130,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,922,16,20,1779,236
+1024,LM-133,Little Meow,Residential,Nano,Lowrise,Far,Close,4,3,704,17,21,1845,158
+1024,LM-134,Little Meow,Residential,Nano,Lowrise,Far,Close,5,4,741,20,25,1797,143
+1024,LM-135,Little Meow,Residential,Nano,Lowrise,Far,Close,4,4,737,20,24,1760,160
+1024,LM-136,Little Meow,Residential,Nano,Lowrise,Far,Close,5,4,724,23,28,1728,168
