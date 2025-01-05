@@ -1,0 +1,16 @@
+1. why is the orderManager instantiated in the startOrder Action validate function?
+wouldn't it get instantiated in the startOrder Action handler function?
+
+not sure why it wouldn't get created multiple times
+
+2. how is the {{recentConversation}} macro "hydrated" in the startOrder Action handler function?
+you may need to refer to packages/core/src/* fields
+
+
+3. explain about the "z" object in the startOrder Action handler function, which is imported from zod.
+what is zod?
+
+
+4. why is orderManager = new PizzaOrderManager instantiated in the startOrder Action handler function as well as
+in the validator function?
+

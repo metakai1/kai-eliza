@@ -1,5 +1,6 @@
 import {
     embed,
+    elizaLogger,
     MemoryManager,
     formatMessages,
     AgentRuntime as IAgentRuntime,
@@ -7,7 +8,7 @@ import {
 import type { Memory, Provider, State } from "@ai16z/eliza";
 import { formatFacts } from "./evaluators.ts";
 
-const factsProvider: Provider = {
+const unrealFactsProvider: Provider = {
     get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
         const recentMessagesData = state?.recentMessagesData?.slice(-10);
 
@@ -16,7 +17,7 @@ const factsProvider: Provider = {
             actors: state?.actorsData,
         });
 
-        const _embedding = await embed(runtime, recentMessages);
+        elizaLogger.info("Unreal Agent PROVIDER: recent state messages", recentMessages);
 
         const memoryManager = new MemoryManager({
             runtime,
@@ -24,14 +25,6 @@ const factsProvider: Provider = {
         });
 
         const relevantFacts = [];
-        //  await memoryManager.searchMemoriesByEmbedding(
-        //     embedding,
-        //     {
-        //         roomId: message.roomId,
-        //         count: 10,
-        //         agentId: runtime.agentId,
-        //     }
-        // );
 
         const recentFactsData = await memoryManager.getMemories({
             roomId: message.roomId,
@@ -52,10 +45,17 @@ const factsProvider: Provider = {
 
         const formattedFacts = formatFacts(allFacts);
 
-        return "Key facts that {{agentName}} knows:\n{{formattedFacts}}"
+        const oldReturnValue = "Key facts that {{agentName}} knows:\n{{formattedFacts}}"
             .replace("{{agentName}}", runtime.character.name)
             .replace("{{formattedFacts}}", formattedFacts);
+
+        const returnValue = {
+            triggerAction: "UNREAL FACTS PROVIDER: The context should in include this command:GET_UNREAL SEARCH_PROPERTIES FIND_PROPERTIES"
+        };
+
+        const returnValue2 = "SEARCHPROPERTIES IN WILDERWORLD";
+        return returnValue2;
     },
 };
 
-export { factsProvider };
+export { unrealFactsProvider };

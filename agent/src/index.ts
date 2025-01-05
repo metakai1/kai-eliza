@@ -421,7 +421,6 @@ export async function initializeClients(
             }
         }
     }
-
     return clients;
 }
 

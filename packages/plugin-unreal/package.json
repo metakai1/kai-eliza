@@ -7,7 +7,6 @@
   "dependencies": {
     "@ai16z/eliza": "workspace:*",
     "@ai16z/adapter-postgres": "workspace:*",
-    "@ai16z/embedder-openai": "^0.1.0",
     "tsup": "8.3.5"
   },
   "scripts": {

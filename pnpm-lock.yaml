@@ -204,6 +204,9 @@ importers:
       '@ai16z/plugin-ton':
         specifier: workspace:*
         version: link:../packages/plugin-ton
+      '@ai16z/plugin-unreal':
+        specifier: workspace:*
+        version: link:../packages/plugin-unreal
       '@ai16z/plugin-zksync-era':
         specifier: workspace:*
         version: link:../packages/plugin-zksync-era

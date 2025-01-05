@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { LandDatabaseAdapter } from "../land_database_adapter";
+import { LandDatabaseAdapter } from "./land_database_adapter";
 import { LandMemorySystem } from "../land_memory_system";
 import {
     LandPlotMemory,

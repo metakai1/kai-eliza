@@ -36,6 +36,7 @@ import {
     ActionResponse,
 } from "./types.ts";
 import { fal } from "@fal-ai/client";
+import { logContext } from "./contextLogger.ts";
 
 /**
  * Send a message to the model for a text generateText - receive a string back and parse how you'd like
@@ -65,6 +66,8 @@ export async function generateText({
         console.error("generateText context is empty");
         return "";
     }
+
+    logContext(context, "generateText");
 
     elizaLogger.log("Generating text...");
 
