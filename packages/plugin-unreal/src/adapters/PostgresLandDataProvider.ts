@@ -14,9 +14,9 @@ export class PostgresLandDataProvider implements ILandDataProvider {
         return await this.dbAdapter.getLandMemories(roomId);
     }
 
-    async removeAllLandMemories(roomId: UUID): Promise<void> {
+/*     async removeAllLandMemories(roomId: UUID): Promise<void> {
         await this.dbAdapter.removeAllLandMemories(roomId);
-    }
+    } */
 
     async updateLandMemory(memory: LandPlotMemory): Promise<void> {
         // TODO: Implement this method in LandDatabaseAdapter

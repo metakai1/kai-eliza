@@ -188,14 +188,14 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
     }
 
     let response = `I found ${landMemories.length} properties matching your criteria:\n\n`;
+
     landMemories.forEach(property => {
         const metadata = property.content.metadata;
-        response += `${metadata.name} in ${metadata.neighborhood}:\n`;
-        response += `- ${metadata.buildingType} ${metadata.zoning} building\n`;
-        response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)\n`;
-        response += `- Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}\n`;
-        response += `- Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category})\n`;
-        response += `- Bay: ${metadata.distances.bay.meters}m (${metadata.distances.bay.category})\n\n`;
+        response += `${metadata.name} in ${metadata.neighborhood}: ${metadata.zoning}  \n`;
+        response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)  ${metadata.buildingType} `;
+        response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}\n`;
+        response += `- To Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category}) `;
+        response += ` To Bay: ${metadata.distances.bay.meters}m (${metadata.distances.bay.category})\n\n`;
     });
 
     return response;

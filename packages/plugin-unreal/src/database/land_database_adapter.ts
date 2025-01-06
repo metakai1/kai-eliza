@@ -24,7 +24,7 @@ export class LandDatabaseAdapter {
         // Add any additional initialization specific to LandDatabaseAdapter if needed
     }
 
-/*     async createLandMemory(memory: LandPlotMemory): Promise<void> {
+    async createLandMemory(memory: LandPlotMemory): Promise<void> {
         console.log("Creating land memory with :", memory.embedding);
         await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
@@ -34,7 +34,7 @@ export class LandDatabaseAdapter {
         if (!memory) return undefined;
         return memory as LandPlotMemory;
     }
- */
+
     async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
         const memories = await this.dbAdapter.getMemories({
             roomId,
