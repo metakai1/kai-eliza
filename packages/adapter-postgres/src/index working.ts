@@ -56,13 +56,6 @@ export class PostgresDatabaseAdapter
             connectionTimeoutMillis: this.connectionTimeout,
         };
 
-        // Log connection config (safely)
-        elizaLogger.info("Postgres connection config:", {
-            hasConnectionString: !!connectionConfig.connectionString,
-            connectionStringType: typeof connectionConfig.connectionString,
-            configKeys: Object.keys(connectionConfig)
-        });
-
         this.pool = new pg.Pool({
             ...defaultConfig,
             ...connectionConfig, // Allow overriding defaults
@@ -300,7 +293,6 @@ export class PostgresDatabaseAdapter
                 .map((_, i) => `$${i + 2}`)
                 .join(", ");
 
-            // TODO: add a table name to the query
             let query = `SELECT * FROM memories WHERE type = $1 AND "roomId" IN (${placeholders})`;
             let queryParams = [params.tableName, ...params.roomIds];
 
@@ -449,10 +441,10 @@ export class PostgresDatabaseAdapter
         });
     }
 
-    async getMemoryById(id: UUID, type: string = 'memories', dbTable: string = 'memories'): Promise<Memory | null> {
+    async getMemoryById(id: UUID): Promise<Memory | null> {
         return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
-                `SELECT * FROM ${dbTable} WHERE id = $1`,
+                "SELECT * FROM memories WHERE id = $1",
                 [id]
             );
             if (rows.length === 0) return null;
@@ -467,12 +459,7 @@ export class PostgresDatabaseAdapter
         }, "getMemoryById");
     }
 
-    async createMemory(
-        memory: Memory,
-        type: string,
-        unique?: boolean,
-        dbTable: string = 'memories'
-    ): Promise<void> {
+    async createMemory(memory: Memory, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
             elizaLogger.debug("PostgresAdapter createMemory:", {
                 memoryId: memory.id,
@@ -485,7 +472,7 @@ export class PostgresDatabaseAdapter
                 const similarMemories = await this.searchMemoriesByEmbedding(
                     memory.embedding,
                     {
-                        tableName: type,
+                        tableName,
                         roomId: memory.roomId,
                         match_threshold: 0.95,
                         count: 1,
@@ -495,12 +482,12 @@ export class PostgresDatabaseAdapter
             }
 
             await this.pool.query(
-                `INSERT INTO ${dbTable} (
+                `INSERT INTO memories (
                     id, type, content, embedding, "userId", "roomId", "agentId", "unique", "createdAt"
                 ) VALUES ($1, $2, $3, $4, $5::uuid, $6::uuid, $7::uuid, $8, to_timestamp($9/1000.0))`,
                 [
                     memory.id ?? v4(),
-                    type,
+                    tableName,
                     JSON.stringify(memory.content),
                     memory.embedding ? `[${memory.embedding.join(",")}]` : null,
                     memory.userId,
@@ -540,17 +527,14 @@ export class PostgresDatabaseAdapter
         agentId?: UUID;
         start?: number;
         end?: number;
-        dbTable?: string;
     }): Promise<Memory[]> {
         // Parameter validation
         if (!params.tableName) throw new Error("tableName is required");
         if (!params.roomId) throw new Error("roomId is required");
 
-        const dbTable = params.dbTable || 'memories';
-
         return this.withDatabase(async () => {
             // Build query
-            let sql = `SELECT * FROM ${dbTable} WHERE type = $1 AND "roomId" = $2`;
+            let sql = `SELECT * FROM memories WHERE type = $1 AND "roomId" = $2`;
             const values: any[] = [params.tableName, params.roomId];
             let paramCount = 2;
 
@@ -1091,7 +1075,6 @@ export class PostgresDatabaseAdapter
             roomId?: UUID;
             unique?: boolean;
             tableName: string;
-            dbTable?: string;
         }
     ): Promise<Memory[]> {
         return this.withDatabase(async () => {
@@ -1125,12 +1108,10 @@ export class PostgresDatabaseAdapter
                 sampleStr: vectorStr.slice(0, 100),
             });
 
-            const dbTable = params.dbTable || 'memories';
-
             let sql = `
                 SELECT *,
                 1 - (embedding <-> $1::vector(${getEmbeddingConfig().dimensions})) as similarity
-                FROM ${dbTable}
+                FROM memories
                 WHERE type = $2
             `;
 
@@ -1230,20 +1211,20 @@ export class PostgresDatabaseAdapter
         }, "updateGoalStatus");
     }
 
-    async removeMemory(memoryId: UUID, type: string, dbTable: string = 'memories'): Promise<void> {
+    async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
             await this.pool.query(
-                `DELETE FROM ${dbTable} WHERE type = $1 AND id = $2`,
-                [type, memoryId]
+                "DELETE FROM memories WHERE type = $1 AND id = $2",
+                [tableName, memoryId]
             );
         }, "removeMemory");
     }
 
-    async removeAllMemories(roomId: UUID, type: string, dbTable: string = 'memories'): Promise<void> {
+    async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
             await this.pool.query(
-                `DELETE FROM ${dbTable} WHERE type = $1 AND "roomId" = $2`,
-                [type, roomId]
+                `DELETE FROM memories WHERE type = $1 AND "roomId" = $2`,
+                [tableName, roomId]
             );
         }, "removeAllMemories");
     }
@@ -1251,18 +1232,17 @@ export class PostgresDatabaseAdapter
     async countMemories(
         roomId: UUID,
         unique = true,
-        type = "",
-        dbTable: string = 'memories'
+        tableName = ""
     ): Promise<number> {
-        if (!type) throw new Error("type is required");
+        if (!tableName) throw new Error("tableName is required");
 
         return this.withDatabase(async () => {
-            let sql = `SELECT COUNT(*) as count FROM ${dbTable} WHERE type = $1 AND "roomId" = $2`;
+            let sql = `SELECT COUNT(*) as count FROM memories WHERE type = $1 AND "roomId" = $2`;
             if (unique) {
                 sql += ` AND "unique" = true`;
             }
 
-            const { rows } = await this.pool.query(sql, [type, roomId]);
+            const { rows } = await this.pool.query(sql, [tableName, roomId]);
             return parseInt(rows[0].count);
         }, "countMemories");
     }

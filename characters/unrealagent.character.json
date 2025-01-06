@@ -1,7 +1,7 @@
 {
     "name": "ATLAS",
     "agentId": "1459b245-2171-02f6-b436-c3c2641848e5",
-    "clients": ["direct", "discord"],
+    "clients": ["direct","discord"],
     "modelProvider": "openai",
     "settings": {
         "voice": {

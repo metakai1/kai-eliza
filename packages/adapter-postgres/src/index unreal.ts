@@ -56,13 +56,6 @@ export class PostgresDatabaseAdapter
             connectionTimeoutMillis: this.connectionTimeout,
         };
 
-        // Log connection config (safely)
-        elizaLogger.info("Postgres connection config:", {
-            hasConnectionString: !!connectionConfig.connectionString,
-            connectionStringType: typeof connectionConfig.connectionString,
-            configKeys: Object.keys(connectionConfig)
-        });
-
         this.pool = new pg.Pool({
             ...defaultConfig,
             ...connectionConfig, // Allow overriding defaults

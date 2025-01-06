@@ -174,22 +174,6 @@ export class LandMemorySystem {
         }
     }
 
-    async getLandKnowledgeById(id: UUID): Promise<LandKnowledgeItem | undefined> {
-        const memory = await this.dataProvider.getLandMemoryById(id);
-        if (!memory) return undefined;
-
-        return {
-            id: memory.id,
-            content: memory.content,
- //           text: memory.text,
- //         metadata: memory.metadata
-        };
-    }
-
-    async getPropertyDataById(id: UUID): Promise<LandPlotMemory | undefined> {
-        const result = await this.dataProvider.getLandMemoryById(id);
-        return result;
-    }
 
     /**
      * Stores a property in the land memory system

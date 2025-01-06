@@ -1,4 +1,4 @@
-import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
+import { IDatabaseAdapter } from "@ai16z/eliza";
 import { elizaLogger, UUID } from "@ai16z/eliza";
 import {
     LandPlotMemory,
@@ -11,29 +11,31 @@ import {
 
 const LAND_MEMORY_TYPE = 'land_plot';
 
-export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
-    constructor(connectionConfig: any) {
-        super(connectionConfig);
+export class LandDatabaseAdapter {
+    private dbAdapter: IDatabaseAdapter;
+
+    constructor(configOrAdapter: IDatabaseAdapter) {
+        this.dbAdapter = configOrAdapter;
     }
 
     async init(): Promise<void> {
-        await super.init();
+        await this.dbAdapter.init();
         // Add any additional initialization specific to LandDatabaseAdapter if needed
     }
 
     async createLandMemory(memory: LandPlotMemory): Promise<void> {
         console.log("Creating land memory with :", memory.embedding);
-        await this.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
+        await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
 
     async getLandMemoryById(id: UUID): Promise<LandPlotMemory | undefined> {
-        const memory = await super.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
+        const memory = await this.dbAdapter.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
         if (!memory) return undefined;
         return memory as LandPlotMemory;
     }
 
     async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
-        const memories = await this.getMemories({
+        const memories = await this.dbAdapter.getMemories({
             roomId,
             tableName: LAND_MEMORY_TYPE,
             dbTable: LAND_TABLE
@@ -42,11 +44,11 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
     }
 
     async removeLandMemory(memoryId: UUID): Promise<void> {
-        await this.removeMemory(memoryId, LAND_MEMORY_TYPE, LAND_TABLE);
+        await this.dbAdapter.removeMemory(memoryId, LAND_MEMORY_TYPE, LAND_TABLE);
     }
 
     async removeAllLandMemories(roomId: UUID): Promise<void> {
-        await this.removeAllMemories(roomId, LAND_MEMORY_TYPE, LAND_TABLE);
+        await this.dbAdapter.removeAllMemories(roomId, LAND_MEMORY_TYPE, LAND_TABLE);
     }
 
     async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
@@ -122,7 +124,7 @@ export class LandDatabaseAdapter extends PostgresDatabaseAdapter {
         }
 
         try {
-            const { rows } = await this.query(sql, values);
+            const { rows } = await this.dbAdapter.query(sql, values);
             return rows.map(row => ({
                 ...row,
                 content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content

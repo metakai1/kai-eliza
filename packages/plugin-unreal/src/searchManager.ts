@@ -3,6 +3,8 @@ import { LandSearchParams, LandPlotMemory, SearchMetadata, SearchMetadataSchema 
 import { IAgentRuntime } from '@ai16z/eliza';
 import { PostgresLandDataProvider } from './adapters/PostgresLandDataProvider';
 import { LandDatabaseAdapter } from './database/land_database_adapter';
+import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
+import { elizaLogger } from "@ai16z/eliza";
 
 interface PropertyResult {
     rank: number;
@@ -26,6 +28,110 @@ interface PropertyResult {
         };
     };
     plotArea: number;
+}
+
+export interface SearchSession {
+    status: "ACTIVE" | "INACTIVE";
+    lastQuery: string | null;
+    results: LandPlotMemory[];
+    filters: Partial<LandSearchParams>;
+}
+
+export class PropertySearchManager {
+    private memorySystem: LandMemorySystem;
+
+    constructor(private runtime: IAgentRuntime) {
+        //elizaLogger.info("🚀 Initializing PropertySearchManager...");
+
+        if (!runtime.databaseAdapter) {
+            throw new Error("Database adapter not found in runtime");
+        }
+
+        //elizaLogger.info("✅ Using database adapter:", runtime.databaseAdapter.constructor.name);
+
+        const dbAdapter = new LandDatabaseAdapter(runtime.databaseAdapter);
+        const landDataProvider = new PostgresLandDataProvider(dbAdapter);
+        this.memorySystem = new LandMemorySystem(landDataProvider);
+
+        elizaLogger.info("✅ PropertySearchManager initialization complete");
+    }
+
+    async createSearchSession(userId: string, initialState: SearchSession) {
+        await this.runtime.cacheManager.set(`property-search-${userId}`, initialState);
+    }
+
+    async getSearchSession(userId: string): Promise<SearchSession | null> {
+        const session = await this.runtime.cacheManager.get<SearchSession>(
+            `property-search-${userId}`
+        );
+        return session || null;
+    }
+
+    async updateSearchResults(userId: string, results: LandPlotMemory[]) {
+        const session = await this.getSearchSession(userId);
+        if (!session) return;
+
+        session.results = results;
+        await this.runtime.cacheManager.set(`property-search-${userId}`, session);
+    }
+
+    async executeSearch(searchMetadata: SearchMetadata): Promise<LandPlotMemory[] | null> {
+        const validatedMetadata = searchMetadata;
+
+        // Convert SearchMetadata to LandSearchParams, only including defined fields
+        const searchParams: Partial<LandSearchParams> = {};
+
+        if (validatedMetadata.metadata.neighborhood?.length) {
+            searchParams.neighborhoods = validatedMetadata.metadata.neighborhood;
+        }
+        if (validatedMetadata.metadata.zoningTypes?.length) {
+            searchParams.zoningTypes = validatedMetadata.metadata.zoningTypes;
+        }
+        if (validatedMetadata.metadata.plotSizes?.length) {
+            searchParams.plotSizes = validatedMetadata.metadata.plotSizes;
+        }
+        if (validatedMetadata.metadata.buildingTypes?.length) {
+            searchParams.buildingTypes = validatedMetadata.metadata.buildingTypes;
+        }
+        if (validatedMetadata.metadata.distances?.ocean || validatedMetadata.metadata.distances?.bay) {
+            searchParams.distances = {};
+            if (validatedMetadata.metadata.distances.ocean) {
+                searchParams.distances.ocean = {
+                    maxMeters: validatedMetadata.metadata.distances.ocean.maxMeters,
+                    category: validatedMetadata.metadata.distances.ocean.category
+                };
+            }
+            if (validatedMetadata.metadata.distances.bay) {
+                searchParams.distances.bay = {
+                    maxMeters: validatedMetadata.metadata.distances.bay.maxMeters,
+                    category: validatedMetadata.metadata.distances.bay.category
+                };
+            }
+        }
+        if (validatedMetadata.metadata.building?.floors || validatedMetadata.metadata.building?.height) {
+            searchParams.building = {};
+            if (validatedMetadata.metadata.building.floors) {
+                searchParams.building.floors = validatedMetadata.metadata.building.floors;
+            }
+            if (validatedMetadata.metadata.building.height) {
+                searchParams.building.height = validatedMetadata.metadata.building.height;
+            }
+        }
+        if (validatedMetadata.metadata.rarity?.rankRange) {
+            searchParams.rarity = {
+                rankRange: validatedMetadata.metadata.rarity.rankRange
+            };
+        }
+
+        // Return null if no search parameters were defined
+        if (Object.keys(searchParams).length === 0) {
+            return null;
+        }
+
+        console.log('Search parameters:', searchParams);
+
+        return await this.memorySystem.mockSearchPropertiesByParams(searchParams);
+    }
 }
 
 const sampleProperties: PropertyResult[] = [
@@ -127,80 +233,4 @@ const sampleProperties: PropertyResult[] = [
         },
         plotArea: 7393
     }
-];
-
-export interface SearchSession {
-    status: "ACTIVE" | "INACTIVE";
-    lastQuery: string | null;
-    results: LandPlotMemory[];
-    filters: Partial<LandSearchParams>;
-}
-
-export class PropertySearchManager {
-    private memorySystem: LandMemorySystem;
-
-    constructor(private runtime: IAgentRuntime) {
-        // Create database adapter and wrap it in our data provider
-        const dbAdapter = new LandDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL || 'postgresql://postgres:postgres@localhost:5432/test',
-            max: 20,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-        });
-
-        const landDataProvider = new PostgresLandDataProvider(dbAdapter);
-
-        // Initialize memory system with the data provider
-        this.memorySystem = new LandMemorySystem(landDataProvider);
-    }
-
-    async createSearchSession(userId: string, initialState: SearchSession) {
-        await this.runtime.setMemory(userId + "_property_search", initialState);
-    }
-
-    async getSearchSession(userId: string): Promise<SearchSession | null> {
-        return await this.runtime.getMemory(userId + "_property_search");
-    }
-
-    async updateSearchResults(userId: string, results: LandPlotMemory[]) {
-        const session = await this.getSearchSession(userId);
-        if (!session) return;
-
-        session.results = results;
-        await this.runtime.setMemory(userId + "_property_search", session);
-    }
-
-    async executeSearch(searchMetadata: SearchMetadata): Promise<LandPlotMemory[]> {
-        // Validate search metadata using Zod schema
-        const validatedMetadata = SearchMetadataSchema.parse(searchMetadata);
-
-        // Convert SearchMetadata to LandSearchParams
-        const searchParams: Partial<LandSearchParams> = {
-            neighborhoods: validatedMetadata.metadata.neighborhood,
-            zoningTypes: validatedMetadata.metadata.zoningTypes,
-            plotSizes: validatedMetadata.metadata.plotSizes,
-            buildingTypes: validatedMetadata.metadata.buildingTypes,
-            distances: {
-                ocean: validatedMetadata.metadata.distances?.ocean ? {
-                    maxMeters: validatedMetadata.metadata.distances.ocean.maxMeters,
-                    category: validatedMetadata.metadata.distances.ocean.category
-                } : undefined,
-                bay: validatedMetadata.metadata.distances?.bay ? {
-                    maxMeters: validatedMetadata.metadata.distances.bay.maxMeters,
-                    category: validatedMetadata.metadata.distances.bay.category
-                } : undefined
-            },
-            building: {
-                floors: validatedMetadata.metadata.building?.floors,
-                height: validatedMetadata.metadata.building?.height
-            },
-            rarity: {
-                rankRange: validatedMetadata.metadata.rarity?.rankRange
-            }
-        };
-
-        // Use the memory system's search functionality
-        return await this.memorySystem.mockSearchPropertiesByParams(searchParams);
-        // return await this.memorySystem.searchPropertiesByParams(searchParams);
-    }
-}
+]

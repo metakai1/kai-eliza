@@ -1,13 +1,14 @@
 import { Action, IAgentRuntime, Memory, State,
     ModelClass,
     composeContext,
+    generateObject,
+    HandlerCallback
 } from "@ai16z/eliza";
 
 import { PropertySearchManager } from "./searchManager";
 //import { generateObjectV2 } from "@ai16z/eliza";
 import { LAND_QUERY_SYSTEM_PROMPT } from "./database/land_memory_system";
 import { LandPlotMemory, SearchMetadataSchema } from "./types";
-import { Z } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 import { z } from "zod";
 
 export const processPropertySearch: Action = {
@@ -46,71 +47,101 @@ export const processPropertySearch: Action = {
             },
         ],
     ],
-    handler: async (runtime: IAgentRuntime, message: Memory, state: State | undefined) => {
+    handler: async (runtime: IAgentRuntime,
+        message: Memory,
+        state: State | undefined,
+        options: any,
+        callback: HandlerCallback
+    ) => {
         if (!state) {
             throw new Error('State is required for property search processing');
         }
+
         const searchManager = new PropertySearchManager(runtime);
+
 
         const TEST_LAND_QUERY_SYSTEM_PROMPT = `
 You are helping to test a memory retrieval system. For test purposes,
 Please generate this specific JSON response for the query given.
 Only respond with the JSON response. You should insert the original USER PROMPT
-into the JSON reponse in {user supplied query}.  for the metadata, just
+into the JSON reponse in USERPROMPT.  for the metadata, just
 use the values provided below.  In this way we test the memory retrieval system.
-HERE IS THE JSON RESPONSE template below.  Only responsd with the JSON reponse.
+HERE IS THE JSON RESPONSE template below.  Only respond with the JSON reponse.
 {
-    "searchText": "{user supplied query}",
+    "searchText": "USERPROMPT",
     "metadata": {
         "neighborhood": ["Flashing Lights"],
-        "maxDistance": {
-            "ocean": 300,
-            "bay": null
+        "distances": {
+            "ocean": {
+                "maxMeters": 300,
+                "category": "Close"
+            },
+            "bay": {
+                "maxMeters": 500,
+                "category": "Medium"
+            }
         }
     }
 }
 USER PROMPT:
-{{currentMessage}}
+give me all properties in space mind
 `
         const context = composeContext({
             state,
-            template: LAND_QUERY_SYSTEM_PROMPT,
+            template: TEST_LAND_QUERY_SYSTEM_PROMPT,
         });
 
-        console.log("Generated context:", context);
+        console.log("Composed context:", context);
 
-        // Generate search metadata using LLM
-/*         const searchMetadata = (await generateObjectV2({
+        const metadataResult = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,
-            schema: SearchMetadataSchema,
-        })) as z.infer<typeof SearchMetadataSchema>;
- */
+            schema: z.object({
+                searchText: z.string(),
+                metadata: z.object({
+                    neighborhood: z.array(z.string()),
+                    distances: z.object({
+                        ocean: z.object({
+                            maxMeters: z.number(),
+                            category: z.enum(["Close", "Medium", "Far"])
+                        }),
+                        bay: z.object({
+                            maxMeters: z.number(),
+                            category: z.enum(["Close", "Medium", "Far"])
+                        })
+                    })
+                })
+            })
+        });
 
-        const searchMetadata = {
-            searchText: message.content.text,
-            metadata: {
-                neighborhood: ["Flashing Lights"],
-                maxDistance: {
-                    ocean: 300,
-                    bay: null
-                }
-            }
+        if (!metadataResult?.object) {
+            throw new Error('Failed to generate search metadata');
         }
 
-        console.log("Generated search metadata:", searchMetadata);
+        console.log("Generated search metadata object: ", metadataResult.object);
+        // Validate search metadata using Zod schema
+        // const validatedMetadata = SearchMetadataSchema.parse(metadataResult);
 
         // Execute search
-        const results = await searchManager.executeSearch(searchMetadata);
+        const results = await searchManager.executeSearch(metadataResult.object);
+
+        if (!!results) {
+            await searchManager.updateSearchResults(message.userId, results);
+        };
 
         console.log("Search results:", results);
 
-        // Store results in session
-        await searchManager.updateSearchResults(message.userId, results);
-
         // Format response
-        return formatSearchResults(results);
+        const formattedResponse = formatSearchResults(results);
+
+        console.log("Formatted response:", formattedResponse);
+
+        callback({
+            text: formattedResponse
+        });
+
+        return true;
     },
     validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
         const searchManager = new PropertySearchManager(runtime);
@@ -137,3 +168,12 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
 
     return response;
 }
+
+        // Generate search metadata using LLM
+/*          const searchMetadata = (await generateObjectV2({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+            schema: SearchMetadataSchema,
+        })) as z.infer<typeof SearchMetadataSchema>; */
+

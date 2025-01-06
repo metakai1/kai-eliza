@@ -6,13 +6,15 @@ import { LandPlotMemory, LandSearchParams } from "./types";
 export const propertySearchProvider: Provider = {
     get: async (runtime, message) => {
         const searchManager = new PropertySearchManager(runtime);
+
         const session = await searchManager.getSearchSession(message.userId);
 
         if (!session || session.status === "INACTIVE") {
             return "\nThe user has not started a Wilder World property search session.\n";
         }
 
-        let context = `Current property search session:\n`;
+        let context = `\n# Wilder World propery search session:\n
+The user is currently searching for Wilder World properties. Current property search session:\n`;
 
         if (session.lastQuery) {
             context += `Last search: "${session.lastQuery}"\n`;
@@ -20,10 +22,10 @@ export const propertySearchProvider: Provider = {
 
         if (session.results.length > 0) {
             context += `Found ${session.results.length} properties in last search.\n`;
-            const neighborhoods = [...new Set(session.results.map(r => r.metadata.neighborhood))];
+            const neighborhoods = [...new Set(session.results.map(r => r.content.metadata.neighborhood))];
             context += `Properties found in: ${neighborhoods.join(", ")}\n`;
 
-            const zoningTypes = [...new Set(session.results.map(r => r.metadata.zoning))];
+            const zoningTypes = [...new Set(session.results.map(r => r.content.metadata.zoning))];
             context += `Zoning types: ${zoningTypes.join(", ")}\n`;
         }
 
