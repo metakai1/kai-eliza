@@ -8,6 +8,7 @@ node_modules
 concatenated-output.ts
 embedding-cache.json
 packages/plugin-buttplug/intiface-engine
+agent/contextlogs/*
 
 .DS_Store
 
