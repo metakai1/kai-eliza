@@ -4,10 +4,11 @@ import { z } from "zod";
 export enum PlotSize {
     Nano = 'Nano',
     Micro = 'Micro',
-    Small = 'Small',
-    Medium = 'Medium',
-    Large = 'Large',
+    Mini = 'Mini',
+    Mid = 'Mid',
+    Macro = 'Macro',
     Mega = 'Mega',
+    Mammoth = 'Mammoth',
     Giga = 'Giga'
 }
 
@@ -15,23 +16,23 @@ export enum ZoningType {
     Residential = 'Residential',
     Commercial = 'Commercial',
     Industrial = 'Industrial',
-    Mixed = 'Mixed',
-    Special = 'Special',
+    Mixed = 'Mixed Use',  // Note: Changed to "Mixed Use"
     Legendary = 'Legendary'
 }
 
 export enum BuildingType {
-    LowRise = 'LowRise',
-    MidRise = 'MidRise',
-    HighRise = 'HighRise',
-    Skyscraper = 'Skyscraper',
-    Megascraper = 'Megascraper'
+    Lowrise = 'Lowrise',    // 2-20 floors
+    Midrise = 'Midrise',    // 21-35 floors
+    Highrise = 'Highrise',  // 36-65 floors
+    Tall = 'Tall',          // 66-80 floors
+    Supertall = 'Supertall',// 81-100 floors
+    Megatall = 'Megatall'   // 100+ floors
 }
 
 export enum DistanceCategory {
-    Close = 'Close',
-    Medium = 'Medium',
-    Far = 'Far'
+    Close = 'Close',    // 0-300m
+    Medium = 'Medium',  // 301-700m
+    Far = 'Far'        // 701m+
 }
 
 export interface LandPlotMetadata {
@@ -121,7 +122,8 @@ export interface LandKnowledgeItem {
 export const SearchMetadataSchema = z.object({
     searchText: z.string(),
     metadata: z.object({
-        neighborhood: z.array(z.string()).optional(),
+        names: z.array(z.string()).optional(),
+        neighborhoods: z.array(z.string()).optional(),
         zoningTypes: z.array(z.nativeEnum(ZoningType)).optional(),
         plotSizes: z.array(z.nativeEnum(PlotSize)).optional(),
         buildingTypes: z.array(z.nativeEnum(BuildingType)).optional(),

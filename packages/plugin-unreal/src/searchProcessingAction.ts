@@ -2,8 +2,11 @@ import { Action, IAgentRuntime, Memory, State,
     ModelClass,
     composeContext,
     generateObject,
+    generateText,
     HandlerCallback
 } from "@ai16z/eliza";
+import * as fs from "fs";
+import * as path from "path";
 
 import { PropertySearchManager } from "./searchManager";
 //import { generateObjectV2 } from "@ai16z/eliza";
@@ -46,6 +49,51 @@ export const processPropertySearch: Action = {
                 },
             },
         ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "How does the plot size of FL-45 compare to other residential properties in Flashing Lights?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Analyzing plot size comparison in Flashing Lights:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "How many plots in Tranquility Gardens are close to the Ocean?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Searching for oceanfront plots in Tranquility Gardens:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Which SM property is closest to the Ocean?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Finding closest Space Mind property to ocean:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
     ],
     handler: async (runtime: IAgentRuntime,
         message: Memory,
@@ -56,63 +104,49 @@ export const processPropertySearch: Action = {
         if (!state) {
             throw new Error('State is required for property search processing');
         }
+        // read from file
+        const promptDir = path.join(process.cwd(), 'prompts');
+        const landPromptFile = path.join(promptDir, 'land_query_prompt.txt');
+        const queryPromptFile = path.join(promptDir, 'query_extraction_prompt.txt');
 
         const searchManager = new PropertySearchManager(runtime);
 
+        const QUERY_EXTRACTION_SYSTEM_PROMPT = fs.readFileSync(
+            queryPromptFile,
+            'utf-8'
+        );
 
-        const TEST_LAND_QUERY_SYSTEM_PROMPT = `
-You are helping to test a memory retrieval system. For test purposes,
-Please generate this specific JSON response for the query given.
-Only respond with the JSON response. You should insert the original USER PROMPT
-into the JSON reponse in USERPROMPT.  for the metadata, just
-use the values provided below.  In this way we test the memory retrieval system.
-HERE IS THE JSON RESPONSE template below.  Only respond with the JSON reponse.
-{
-    "searchText": "USERPROMPT",
-    "metadata": {
-        "neighborhood": ["Flashing Lights"],
-        "distances": {
-            "ocean": {
-                "maxMeters": 300,
-                "category": "Close"
-            },
-            "bay": {
-                "maxMeters": 500,
-                "category": "Medium"
-            }
-        }
-    }
-}
-USER PROMPT:
-give me all properties in space mind
-`
         const context = composeContext({
             state,
-            template: TEST_LAND_QUERY_SYSTEM_PROMPT,
+            template: QUERY_EXTRACTION_SYSTEM_PROMPT,
         });
 
-        console.log("Composed context:", context);
+        //console.log("Composed context:", context);
+
+        const searchQuery = await generateText({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+        });
+
+        console.log("Generated search query:", searchQuery);
+
+        callback({
+            text: 'Asking ATLAS ' + searchQuery
+        });
+
+        const FILE_LAND_QUERY_SYSTEM_PROMPT = fs.readFileSync(
+            landPromptFile,
+            'utf-8'
+        );
+
+        const landQueryContext = FILE_LAND_QUERY_SYSTEM_PROMPT + searchQuery;
 
         const metadataResult = await generateObject({
             runtime,
-            context,
-            modelClass: ModelClass.LARGE,
-            schema: z.object({
-                searchText: z.string(),
-                metadata: z.object({
-                    neighborhood: z.array(z.string()),
-                    distances: z.object({
-                        ocean: z.object({
-                            maxMeters: z.number(),
-                            category: z.enum(["Close", "Medium", "Far"])
-                        }),
-                        bay: z.object({
-                            maxMeters: z.number(),
-                            category: z.enum(["Close", "Medium", "Far"])
-                        })
-                    })
-                })
-            })
+            context: landQueryContext,
+            modelClass: ModelClass.SMALL,
+            schema: SearchMetadataSchema,
         });
 
         if (!metadataResult?.object) {
@@ -120,8 +154,6 @@ give me all properties in space mind
         }
 
         console.log("Generated search metadata object: ", metadataResult.object);
-        // Validate search metadata using Zod schema
-        // const validatedMetadata = SearchMetadataSchema.parse(metadataResult);
 
         // Execute search
         const results = await searchManager.executeSearch(metadataResult.object);
@@ -176,4 +208,3 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
             modelClass: ModelClass.LARGE,
             schema: SearchMetadataSchema,
         })) as z.infer<typeof SearchMetadataSchema>; */
-

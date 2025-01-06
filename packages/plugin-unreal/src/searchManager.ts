@@ -1,5 +1,5 @@
 import { LandMemorySystem } from './database/land_memory_system';
-import { LandSearchParams, LandPlotMemory, SearchMetadata, SearchMetadataSchema } from './types';
+import { LandSearchParams, LandPlotMemory, SearchMetadata, SearchMetadataSchema, ZoningType, PlotSize, BuildingType } from './types';
 import { IAgentRuntime } from '@ai16z/eliza';
 import { PostgresLandDataProvider } from './adapters/PostgresLandDataProvider';
 import { LandDatabaseAdapter } from './database/land_database_adapter';
@@ -76,51 +76,51 @@ export class PropertySearchManager {
     }
 
     async executeSearch(searchMetadata: SearchMetadata): Promise<LandPlotMemory[] | null> {
-        const validatedMetadata = searchMetadata;
-
-        // Convert SearchMetadata to LandSearchParams, only including defined fields
+        const { metadata } = searchMetadata;
         const searchParams: Partial<LandSearchParams> = {};
 
-        if (validatedMetadata.metadata.neighborhood?.length) {
-            searchParams.neighborhoods = validatedMetadata.metadata.neighborhood;
+        // Handle array fields with proper typing
+        if (metadata.neighborhoods?.length) {
+            searchParams.neighborhoods = metadata.neighborhoods;
         }
-        if (validatedMetadata.metadata.zoningTypes?.length) {
-            searchParams.zoningTypes = validatedMetadata.metadata.zoningTypes;
+        if (metadata.zoningTypes?.length) {
+            searchParams.zoningTypes = metadata.zoningTypes as ZoningType[];
         }
-        if (validatedMetadata.metadata.plotSizes?.length) {
-            searchParams.plotSizes = validatedMetadata.metadata.plotSizes;
+        if (metadata.plotSizes?.length) {
+            searchParams.plotSizes = metadata.plotSizes as PlotSize[];
         }
-        if (validatedMetadata.metadata.buildingTypes?.length) {
-            searchParams.buildingTypes = validatedMetadata.metadata.buildingTypes;
+        if (metadata.buildingTypes?.length) {
+            searchParams.buildingTypes = metadata.buildingTypes as BuildingType[];
         }
-        if (validatedMetadata.metadata.distances?.ocean || validatedMetadata.metadata.distances?.bay) {
+
+        // Handle distances
+        if (metadata.distances?.ocean || metadata.distances?.bay) {
             searchParams.distances = {};
-            if (validatedMetadata.metadata.distances.ocean) {
-                searchParams.distances.ocean = {
-                    maxMeters: validatedMetadata.metadata.distances.ocean.maxMeters,
-                    category: validatedMetadata.metadata.distances.ocean.category
-                };
-            }
-            if (validatedMetadata.metadata.distances.bay) {
-                searchParams.distances.bay = {
-                    maxMeters: validatedMetadata.metadata.distances.bay.maxMeters,
-                    category: validatedMetadata.metadata.distances.bay.category
-                };
-            }
+            ['ocean', 'bay'].forEach(type => {
+                const distance = metadata.distances?.[type];
+                if (distance) {
+                    searchParams.distances![type] = {
+                        maxMeters: distance.maxMeters,
+                        category: distance.category
+                    };
+                }
+            });
         }
-        if (validatedMetadata.metadata.building?.floors || validatedMetadata.metadata.building?.height) {
+
+        // Handle building
+        if (metadata.building?.floors || metadata.building?.height) {
             searchParams.building = {};
-            if (validatedMetadata.metadata.building.floors) {
-                searchParams.building.floors = validatedMetadata.metadata.building.floors;
-            }
-            if (validatedMetadata.metadata.building.height) {
-                searchParams.building.height = validatedMetadata.metadata.building.height;
-            }
+            ['floors', 'height'].forEach(prop => {
+                const value = metadata.building?.[prop];
+                if (value) {
+                    searchParams.building![prop] = value;
+                }
+            });
         }
-        if (validatedMetadata.metadata.rarity?.rankRange) {
-            searchParams.rarity = {
-                rankRange: validatedMetadata.metadata.rarity.rankRange
-            };
+
+        // Handle rarity
+        if (metadata.rarity?.rankRange) {
+            searchParams.rarity = { rankRange: metadata.rarity.rankRange };
         }
 
         // Return null if no search parameters were defined
@@ -129,8 +129,7 @@ export class PropertySearchManager {
         }
 
         console.log('Search parameters:', searchParams);
-
-        return await this.memorySystem.mockSearchPropertiesByParams(searchParams);
+        return await this.memorySystem.searchPropertiesByParams(searchParams);
     }
 }
 

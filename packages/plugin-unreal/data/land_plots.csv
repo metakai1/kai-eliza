@@ -1,0 +1,67 @@
+Rank,Name,Neighborhood,Zoning Type,Plot Size,Building Size,Distance to Ocean,Distance to Bay,Max # of Floors,Min # of Floors,Plot Area (m²),Min Building Height (m),Max Building Height (m),Distance to Ocean (m),Distance to Bay (m)
+1,NX-1,Nexus,Legendary,Giga,Megatall,Close,Far,113,91,8696,455,568,294,1052
+2,FL-163,Flashing Lights,Legendary,Giga,Megatall,Medium,Far,105,84,12473,421,526,462,1191
+2,FL-192,Flashing Lights,Legendary,Giga,Megatall,Medium,Far,116,92,8696,464,580,317,1215
+4,FL-141,Flashing Lights,Legendary,Giga,Megatall,Far,Medium,105,84,13252,421,526,2413,577
+4,FL-162,Flashing Lights,Legendary,Giga,Megatall,Far,Medium,111,89,13901,446,557,1966,548
+6,FL-68,Flashing Lights,Legendary,Giga,Megatall,Far,Far,118,94,13901,474,592,761,1019
+6,FL-112,Flashing Lights,Legendary,Giga,Megatall,Far,Far,107,85,28145,429,536,818,1091
+6,FL-142,Flashing Lights,Legendary,Giga,Megatall,Far,Far,105,84,18064,421,526,1184,731
+9,SM-263,Space Mind,Legendary,Giga,Megatall,Far,Close,109,87,17192,438,547,1574,136
+10,SM-107,Space Mind,Legendary,Giga,Megatall,Far,Medium,111,89,14874,446,557,2049,415
+11,FL-113,Flashing Lights,Legendary,Mammoth,Megatall,Medium,Far,116,92,8239,464,580,314,1467
+12,FL-64,Flashing Lights,Legendary,Mega,Supertall,Far,Medium,94,75,6491,376,470,1947,507
+13,FL-34,Flashing Lights,Legendary,Macro,Supertall,Far,Medium,89,71,5129,359,448,1227,352
+14,NS-930,North Star,Legendary,Macro,Supertall,Medium,Far,86,68,5174,344,430,544,677
+15,FL-81,Flashing Lights,Legendary,Mid,Supertall,Far,Medium,86,68,4038,344,430,2142,392
+16,NS-800,North Star,Legendary,Mid,Supertall,Far,Medium,98,78,4300,392,490,2215,323
+16,NS-882,North Star,Legendary,Mid,Supertall,Far,Medium,94,75,4270,376,470,848,468
+18,FL-110,Flashing Lights,Legendary,Mini,Supertall,Medium,Far,86,68,3495,344,430,471,1363
+19,FL-80,Flashing Lights,Legendary,Mini,Supertall,Far,Medium,82,66,3024,332,414,2251,305
+20,FL-53,Flashing Lights,Legendary,Mini,Supertall,Far,Far,89,71,3279,359,448,794,824
+21,DZ-61,District ZERO,Legendary,Mini,Supertall,Far,Far,84,67,3301,338,422,869,883
+22,NS-736,North Star,Legendary,Mini,Supertall,Far,Medium,82,66,2813,332,414,1566,536
+22,NS-804,North Star,Legendary,Mini,Supertall,Far,Medium,80,64,3040,320,400,1049,530
+24,NS-799,North Star,Legendary,Mid,Tall,Far,Close,77,62,4182,311,388,2318,256
+25,FL-58,Flashing Lights,Legendary,Mini,Tall,Medium,Far,77,62,2998,311,388,591,1049
+26,FL-70,Flashing Lights,Mixed Use,Mega,Tall,Far,Far,71,57,6191,286,357,1794,667
+27,LM-8,Little Meow,Mixed Use,Giga,Highrise,Medium,Far,43,34,8782,172,215,359,1069
+28,DZ-33,District ZERO,Mixed Use,Macro,Tall,Far,Far,66,53,4939,265,331,831,873
+29,FL-30,Flashing Lights,Mixed Use,Mid,Tall,Far,Close,67,53,4235,269,336,1859,143
+30,NS-682,North Star,Mixed Use,Mid,Tall,Medium,Far,60,48,4135,243,303,417,1317
+31,NS-729,North Star,Mixed Use,Mid,Tall,Far,Medium,63,50,3924,254,317,2026,550
+32,NS-915,North Star,Mixed Use,Mid,Tall,Far,Far,73,58,3821,293,366,611,611
+33,FL-117,Flashing Lights,Mixed Use,Mini,Tall,Far,Medium,67,54,2419,272,339,2760,308
+34,FL-57,Flashing Lights,Mixed Use,Mini,Tall,Far,Far,64,52,3433,260,324,739,924
+35,NS-939,North Star,Mixed Use,Mini,Tall,Medium,Far,64,52,3270,260,324,538,730
+36,DZ-74,District ZERO,Mixed Use,Micro,Tall,Far,Far,62,49,2104,248,310,969,861
+37,FL-19,Flashing Lights,Residential,Micro,Tall,Medium,Far,63,50,1577,254,317,353,1048
+38,SM-504,Space Mind,Mixed Use,Mammoth,Highrise,Far,Close,46,36,7624,184,230,1649,232
+39,NS-846,North Star,Mixed Use,Mammoth,Highrise,Far,Close,40,32,7423,162,202,1590,198
+40,NX-22,Nexus,Industrial,Giga,Lowrise,Far,Far,8,6,13093,32,40,713,934
+41,SM-601,Space Mind,Mixed Use,Mammoth,Midrise,Close,Far,35,28,7522,144,179,129,1507
+42,DZ-141,District ZERO,Industrial,Giga,Lowrise,Medium,Far,9,7,21430,37,46,438,1388
+43,TG-17,Tranquility Gardens,Industrial,Giga,Lowrise,Far,Close,9,7,13483,36,45,3734,139
+44,SM-577,Space Mind,Mixed Use,Mega,Highrise,Far,Far,55,44,7169,222,277,830,742
+45,HH-878,Haven Heights,Industrial,Giga,Lowrise,Medium,Far,9,7,9363,36,45,383,673
+46,DZ-52,District ZERO,Industrial,Giga,Lowrise,Far,Medium,8,6,9097,32,40,1922,359
+47,DZ-45,District ZERO,Industrial,Giga,Lowrise,Far,Far,8,6,8800,33,41,958,772
+47,DZ-225,District ZERO,Industrial,Giga,Lowrise,Far,Far,8,6,10095,32,40,1006,1090
+49,DZ-46,District ZERO,Mixed Use,Mammoth,Midrise,Far,Far,21,17,7778,87,108,760,961
+50,HH-963,Haven Heights,Mixed Use,Mammoth,Midrise,Far,Medium,38,31,7914,155,193,782,551
+51,NS-903,North Star,Mixed Use,Macro,Highrise,Medium,Far,45,36,5190,181,226,462,790
+51,NS-931,North Star,Mixed Use,Macro,Highrise,Medium,Far,46,37,5323,188,234,453,766
+53,FL-39,Flashing Lights,Mixed Use,Mid,Highrise,Far,Close,58,46,4363,233,291,2004,210
+54,FL-63,Flashing Lights,Mixed Use,Mid,Highrise,Far,Medium,41,32,3866,164,205,2082,373
+54,FL-90,Flashing Lights,Mixed Use,Mid,Highrise,Far,Medium,52,42,4603,212,264,2536,302
+56,FL-56,Flashing Lights,Mixed Use,Mid,Highrise,Far,Far,48,38,4371,194,242,897,801
+56,FL-99,Flashing Lights,Mixed Use,Mid,Highrise,Far,Far,45,36,4081,181,226,889,1077
+56,FL-138,Flashing Lights,Mixed Use,Mid,Highrise,Far,Far,57,45,3800,228,285,1840,647
+59,FL-133,Flashing Lights,Mixed Use,Mammoth,Lowrise,Far,Medium,19,16,7393,80,99,2709,361
+60,SM-600,Space Mind,Mixed Use,Mega,Midrise,Close,Far,23,18,6846,92,115,185,1445
+61,FL-161,Flashing Lights,Mixed Use,Mammoth,Lowrise,Far,Far,17,13,8021,69,86,616,1070
+62,NS-924,North Star,Mixed Use,Mid,Highrise,Medium,Far,46,37,3851,188,234,434,768
+63,NS-913,North Star,Mixed Use,Mid,Highrise,Far,Close,41,33,3684,168,209,1061,197
+64,FL-66,Flashing Lights,Mixed Use,Mini,Highrise,Medium,Far,50,40,2551,200,250,344,1335
+65,TG-2,Tranquility Gardens,Mixed Use,Mammoth,Lowrise,Far,Close,14,12,8031,60,74,2893,100
+66,FL-158,Flashing Lights,Mixed Use,Mini,Highrise,Far,Medium,49,39,2557,197,246,1788,502

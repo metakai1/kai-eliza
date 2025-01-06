@@ -109,12 +109,12 @@ export class LandMemorySystem {
                         height: { max: 24, min: 15 }
                     },
                     plotArea: 2500,
-                    plotSize: PlotSize.Large, //'Large',
+                    plotSize: PlotSize.Macro, //'Large',
                     distances: {
                         bay: { meters: 2000, category: DistanceCategory.Far },
                         ocean: { meters: 150, category: DistanceCategory.Close }
                     },
-                    buildingType: BuildingType.MidRise, //'MidRise',
+                    buildingType: BuildingType.Midrise, //'MidRise',
                     neighborhood: 'Coastal District'
                 }
             },
