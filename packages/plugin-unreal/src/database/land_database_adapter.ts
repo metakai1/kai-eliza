@@ -25,23 +25,24 @@ export class LandDatabaseAdapter {
     }
 
     async createLandMemory(memory: LandPlotMemory): Promise<void> {
-        console.log("Creating land memory with :", memory.embedding);
-        await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
+        console.log("Creating land memory with :", memory.content.metadata.name);
+        // await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
 
     async getLandMemoryById(id: UUID): Promise<LandPlotMemory | undefined> {
-        const memory = await this.dbAdapter.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
+        const memory = null //await this.dbAdapter.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
         if (!memory) return undefined;
         return memory as LandPlotMemory;
     }
 
     async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
-        const memories = await this.dbAdapter.getMemories({
+/*         const memories = await this.dbAdapter.getMemories({
             roomId,
             tableName: LAND_MEMORY_TYPE,
             dbTable: LAND_TABLE
         });
-        return memories as LandPlotMemory[];
+        return memories as LandPlotMemory[]; */
+        return null
     }
 
 /*     async removeLandMemory(memoryId: UUID): Promise<void> {
@@ -60,6 +61,13 @@ export class LandDatabaseAdapter {
         `;
         const values: any[] = [LAND_MEMORY_TYPE];
         let paramCount = 1;
+
+        // Add names condition
+        if (params.names?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'name' = ANY($${paramCount}::text[])`;
+            values.push(params.names);
+        }
 
         if (params.neighborhoods?.length) {
             paramCount++;
@@ -98,6 +106,18 @@ export class LandDatabaseAdapter {
             }
         }
 
+        if (params.distances?.bay) {
+            if (params.distances.bay.maxMeters) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'distances'->'bay'->>'meters')::int <= $${paramCount}`;
+                values.push(params.distances.bay.maxMeters);
+            }
+            if (params.distances.bay.category) {
+                paramCount++;
+                sql += ` AND content->'metadata'->'distances'->'bay'->>'category' = $${paramCount}`;
+                values.push(params.distances.bay.category);
+            }
+        }
         if (params.building?.floors) {
             if (params.building.floors.min) {
                 paramCount++;

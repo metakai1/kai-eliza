@@ -36,6 +36,7 @@ async function seedDatabase() {
     createReadStream('./data/land_plots.csv')
         .pipe(parser)
         .on('data', async (row) => {
+            console.log('Building Size from CSV:', row['Building Size']); // Add this line
             const memory: LandPlotMemory = {
                 id: row.id,
                 userId: AGENT_ID,
@@ -49,7 +50,7 @@ async function seedDatabase() {
                         neighborhood: row['Neighborhood'],
                         zoning: row['Zoning Type'] as ZoningType,
                         plotSize: row['Plot Size'] as PlotSize,
-                        buildingType: row['Building Type'] as BuildingType,
+                        buildingType: row['Building Size'] as BuildingType,
                         building: {
                             floors: {
                                 min: parseInt(row['Min # of Floors']),

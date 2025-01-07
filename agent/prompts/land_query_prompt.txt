@@ -189,7 +189,25 @@ You are a specialized **real estate search assistant** for a futuristic city. Yo
     }
 }
 ```
+**6. Query:** "List all available details for Little Meow plot 48"
+```json
+{
+    "searchText": "List all available details for Little Meow plot 48",
+    "metadata": {
+        "names": ["LM-48"]
+    }
+}
+```
 
+**7. Query:** "List details for SM-177 and Haven Heights 54"
+```json
+{
+    "searchText": "List details for SM-177 and Haven Heights 54",
+    "metadata": {
+        "names": ["SM-177", "HH-54"]
+    }
+}
+```
 ---
 
 ### **QUERY TRANSLATION RULES:**
@@ -221,3 +239,5 @@ You are a specialized **real estate search assistant** for a futuristic city. Yo
    - "Far": 701+ meters
 
 Note: All metadata fields are optional arrays except for distances and building, which follow their respective object structures. Only searchText is required.
+
+LAND_QUERY_PROMPT:

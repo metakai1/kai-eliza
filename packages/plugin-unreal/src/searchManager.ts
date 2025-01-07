@@ -79,6 +79,10 @@ export class PropertySearchManager {
         const { metadata } = searchMetadata;
         const searchParams: Partial<LandSearchParams> = {};
 
+        // Handle names array
+        if (metadata.names?.length) {
+            searchParams.names = metadata.names;
+        }
         // Handle array fields with proper typing
         if (metadata.neighborhoods?.length) {
             searchParams.neighborhoods = metadata.neighborhoods;

@@ -56,7 +56,7 @@ export const startPropertySearch: Action = {
 
             const responseMsg = {
                 text: `I'm ready to help you search for properties. What kind of property
-                are you looking for? Currently Space mind is the only neighborhood available.`,
+ are you looking for? Currently Space mind is the only neighborhood available.`,
                 //content: {
                 //    action: "START_PROPERTY_SEARCH",
                 //}

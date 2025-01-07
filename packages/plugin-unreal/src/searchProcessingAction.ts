@@ -16,8 +16,8 @@ import { z } from "zod";
 
 export const processPropertySearch: Action = {
     name: "PROCESS_PROPERTY_SEARCH",
-    similes: ["PROCESS_PROPERTY_SEARCH"],
-    description: "Processes a property search and returns results",
+    similes: ["SEARCH_WILDER_LAND","LAND_SEARCH"],
+    description: "Processes a wilder world land property search in the land memory database and returns results",
     examples: [
         [
             {
@@ -116,8 +116,21 @@ export const processPropertySearch: Action = {
             'utf-8'
         );
 
+        // TODO: parse recent messages to filter out very long messages
+        const recentMessages = await runtime.messageManager.getMemories({
+            roomId: message.roomId,
+            count: 6,
+        });
+        // iterate through recentMessages and filter out very long messages
+        const filteredRecentMessages = recentMessages.filter((msg) =>
+            msg.content.text.length <= 1000);
+
+        // add filtered recent messages to context
         const context = composeContext({
-            state,
+            state: {
+                ...state,
+                recentMessagesData: filteredRecentMessages
+            },
             template: QUERY_EXTRACTION_SYSTEM_PROMPT,
         });
 
@@ -132,7 +145,7 @@ export const processPropertySearch: Action = {
         console.log("Generated search query:", searchQuery);
 
         callback({
-            text: 'Asking ATLAS ' + searchQuery
+            text: 'Asking ATLAS: ' + searchQuery
         });
 
         const FILE_LAND_QUERY_SYSTEM_PROMPT = fs.readFileSync(
@@ -141,6 +154,8 @@ export const processPropertySearch: Action = {
         );
 
         const landQueryContext = FILE_LAND_QUERY_SYSTEM_PROMPT + searchQuery;
+
+        //console.log("Land query context:", landQueryContext);
 
         const metadataResult = await generateObject({
             runtime,
@@ -162,12 +177,14 @@ export const processPropertySearch: Action = {
             await searchManager.updateSearchResults(message.userId, results);
         };
 
-        console.log("Search results:", results);
+        // log the names of the properties in results.content.metadata.name
+        // separated by a space and a comma
+        console.log("Search results names:", results.map((result) => result.content.metadata.name).join(", "));
 
         // Format response
         const formattedResponse = formatSearchResults(results);
 
-        console.log("Formatted response:", formattedResponse);
+        //console.log("Formatted response:", formattedResponse);
 
         callback({
             text: formattedResponse
@@ -178,6 +195,10 @@ export const processPropertySearch: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
         const searchManager = new PropertySearchManager(runtime);
         const session = await searchManager.getSearchSession(message.userId);
+
+        //console.log("PROCESS_PROPERTY_SEARCH validate: session= ", session);
+        console.log("PROCESS_PROPERTY_SEARCH validate session status= ", session?.status);
+        console.log("#results in session= ", session?.results.length);
         return !!session && session.status === "ACTIVE";
     }
 };
@@ -189,15 +210,14 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
 
     let response = `I found ${landMemories.length} properties matching your criteria:\n\n`;
 
-    landMemories.forEach(property => {
+    landMemories.slice(0, 10).forEach(property => {
         const metadata = property.content.metadata;
         response += `${metadata.name} in ${metadata.neighborhood}: ${metadata.zoning}  \n`;
         response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)  ${metadata.buildingType} `;
-        response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}\n`;
-        response += `- To Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category}) `;
+        response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}`;
+        response += `  |  Distance To Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category}) `;
         response += ` To Bay: ${metadata.distances.bay.meters}m (${metadata.distances.bay.category})\n\n`;
     });
-
     return response;
 }
 

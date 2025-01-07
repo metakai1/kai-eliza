@@ -63,9 +63,13 @@ export const endPropertySearch: Action = {
         const searchManager = new PropertySearchManager(runtime);
         const session = await searchManager.getSearchSession(message.userId);
 
+        if (!!session) {
+            searchManager.endSearchSession(message.userId);
+        }
+        /*
         if (!session || session.status === "INACTIVE") {
             return false;
-        }
+        } */
 
         return true;
     }

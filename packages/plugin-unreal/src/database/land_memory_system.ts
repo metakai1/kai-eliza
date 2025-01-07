@@ -44,10 +44,10 @@ export class LandMemorySystem {
         private readonly dataProvider: ILandDataProvider,
     ) {}
 
-    async removeAllLandMemories(): Promise<void> {
+/*     async removeAllLandMemories(): Promise<void> {
         await this.dataProvider.removeAllLandMemories(this.roomId);
     }
-
+ */
     async createLandMemoryFromCSV(csvRow: any): Promise<void> {
         try {
             const metadata: LandPlotMetadata = {
