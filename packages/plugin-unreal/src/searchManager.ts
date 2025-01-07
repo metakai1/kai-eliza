@@ -60,6 +60,42 @@ export class PropertySearchManager {
         await this.runtime.cacheManager.set(`property-search-${userId}`, initialState);
     }
 
+    async initializeNewSearchSession(userId: string): Promise<SearchSession> {
+        const initialSession: SearchSession = {
+            status: "ACTIVE",
+            lastQuery: null,
+            results: [],
+            filters: {}
+        };
+
+        await this.createSearchSession(userId, initialSession);
+        return initialSession;
+    }
+
+    async endSearchSession(userId: string): Promise<SearchSession | null> {
+        const session = await this.runtime.cacheManager.get<SearchSession>(
+            `property-search-${userId}`
+        );
+
+        if (session) {
+            // Update the session status to INACTIVE
+            const endedSession: SearchSession = {
+                ...session,
+                status: "INACTIVE"
+            };
+
+            // Save the updated session state
+            await this.runtime.cacheManager.set(
+                `property-search-${userId}`,
+                endedSession
+            );
+
+            return endedSession;
+        }
+
+        return null;
+    }
+
     async getSearchSession(userId: string): Promise<SearchSession | null> {
         const session = await this.runtime.cacheManager.get<SearchSession>(
             `property-search-${userId}`
@@ -136,104 +172,3 @@ export class PropertySearchManager {
         return await this.memorySystem.searchPropertiesByParams(searchParams);
     }
 }
-
-const sampleProperties: PropertyResult[] = [
-    {
-        rank: 44,
-        name: "SM-577",
-        neighborhood: "Space Mind",
-        zoningType: "Mixed Use",
-        plotSize: "Mega",
-        buildingSize: "Highrise",
-        distances: { ocean: 830, bay: 742 },
-        building: {
-            floors: { min: 44, max: 55 },
-            height: { min: 222, max: 277 }
-        },
-        plotArea: 7169
-    },
-    {
-        rank: 45,
-        name: "HH-878",
-        neighborhood: "Haven Heights",
-        zoningType: "Industrial",
-        plotSize: "Giga",
-        buildingSize: "Lowrise",
-        distances: { ocean: 383, bay: 673 },
-        building: {
-            floors: { min: 7, max: 9 },
-            height: { min: 36, max: 45 }
-        },
-        plotArea: 9363
-    },
-    {
-        rank: 47,
-        name: "DZ-225",
-        neighborhood: "District ZERO",
-        zoningType: "Industrial",
-        plotSize: "Giga",
-        buildingSize: "Lowrise",
-        distances: { ocean: 1006, bay: 1090 },
-        building: {
-            floors: { min: 6, max: 8 },
-            height: { min: 32, max: 40 }
-        },
-        plotArea: 10095
-    },
-    {
-        rank: 51,
-        name: "NS-931",
-        neighborhood: "North Star",
-        zoningType: "Mixed Use",
-        plotSize: "Macro",
-        buildingSize: "Highrise",
-        distances: { ocean: 453, bay: 766 },
-        building: {
-            floors: { min: 37, max: 46 },
-            height: { min: 188, max: 234 }
-        },
-        plotArea: 5323
-    },
-    {
-        rank: 54,
-        name: "FL-90",
-        neighborhood: "Flashing Lights",
-        zoningType: "Mixed Use",
-        plotSize: "Mid",
-        buildingSize: "Highrise",
-        distances: { ocean: 2536, bay: 302 },
-        building: {
-            floors: { min: 42, max: 52 },
-            height: { min: 212, max: 264 }
-        },
-        plotArea: 4603
-    },
-    {
-        rank: 56,
-        name: "FL-99",
-        neighborhood: "Flashing Lights",
-        zoningType: "Mixed Use",
-        plotSize: "Mid",
-        buildingSize: "Highrise",
-        distances: { ocean: 889, bay: 1077 },
-        building: {
-            floors: { min: 36, max: 45 },
-            height: { min: 181, max: 226 }
-        },
-        plotArea: 4081
-    },
-    {
-        rank: 59,
-        name: "FL-133",
-        neighborhood: "Flashing Lights",
-        zoningType: "Mixed Use",
-        plotSize: "Mammoth",
-        buildingSize: "Lowrise",
-        distances: { ocean: 2709, bay: 361 },
-        building: {
-            floors: { min: 16, max: 19 },
-            height: { min: 80, max: 99 }
-        },
-        plotArea: 7393
-    }
-]

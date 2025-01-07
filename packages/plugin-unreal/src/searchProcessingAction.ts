@@ -184,8 +184,6 @@ export const processPropertySearch: Action = {
         // Format response
         const formattedResponse = formatSearchResults(results);
 
-        //console.log("Formatted response:", formattedResponse);
-
         callback({
             text: formattedResponse
         });
@@ -196,10 +194,13 @@ export const processPropertySearch: Action = {
         const searchManager = new PropertySearchManager(runtime);
         const session = await searchManager.getSearchSession(message.userId);
 
-        //console.log("PROCESS_PROPERTY_SEARCH validate: session= ", session);
         console.log("PROCESS_PROPERTY_SEARCH validate session status= ", session?.status);
         console.log("#results in session= ", session?.results.length);
-        return !!session && session.status === "ACTIVE";
+        const isValid = !!session && session.status === "ACTIVE";
+        if  (isValid) {
+            console.log("VALIDATE: processPropertySearch validated");
+        }
+        return isValid;
     }
 };
 
@@ -208,7 +209,7 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
         return "I couldn't find any properties matching your criteria. Would you like to try a different search?";
     }
 
-    let response = `I found ${landMemories.length} properties matching your criteria:\n\n`;
+    let response = `I found ${landMemories.length} properties matching your criteria: (first 10 shown)\n\n`;
 
     landMemories.slice(0, 10).forEach(property => {
         const metadata = property.content.metadata;

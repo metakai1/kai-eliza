@@ -46,17 +46,12 @@ export const startPropertySearch: Action = {
     ): Promise<boolean> => {
             const searchManager = new PropertySearchManager(runtime);
 
-            // Initialize search session
-            await searchManager.createSearchSession(message.userId, {
-                status: "ACTIVE",
-                lastQuery: null,
-                results: [],
-                filters: {}
-            });
+            // In initialSearchAction.ts, replace the session initialization code with:
+            await searchManager.initializeNewSearchSession(message.userId);
 
             const responseMsg = {
                 text: `I'm ready to help you search for properties. What kind of property
- are you looking for? Currently Space mind is the only neighborhood available.`,
+ are you looking for? `,
                 //content: {
                 //    action: "START_PROPERTY_SEARCH",
                 //}
@@ -73,12 +68,13 @@ export const startPropertySearch: Action = {
             const userId = message.userId;
 
             // check if an active search session exists for the user
-            const activeSearchSession = await searchManager.getSearchSession(userId);
+            const searchSession = await searchManager.getSearchSession(userId);
 
-            if (activeSearchSession) {
+            if (searchSession?.status === "ACTIVE") {
                 elizaLogger.info("An active search session already exists for the user.");
                 return false;
             }
+            console.log("VALIDATE startPropertySearch validated");
 
             return true;
         } catch (error) {

@@ -118,6 +118,13 @@ export interface LandKnowledgeItem {
     };
 }
 
+export interface SearchSession {
+    status: "ACTIVE" | "INACTIVE";
+    lastQuery: string | null;
+    results: any[];
+    filters: Record<string, any>;
+}
+
 // Zod schema for search metadata
 export const SearchMetadataSchema = z.object({
     searchText: z.string(),

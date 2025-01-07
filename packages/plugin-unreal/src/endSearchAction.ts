@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, State, Action, elizaLogger } from "@ai16z/eliza";
+import { IAgentRuntime, Memory, State, Action, elizaLogger, HandlerCallback } from "@ai16z/eliza";
 import { PropertySearchManager } from "./searchManager";
 
 export const endPropertySearch: Action = {
@@ -37,40 +37,30 @@ export const endPropertySearch: Action = {
             },
         ],
     ],
-    handler: async (runtime: IAgentRuntime, message: Memory, state: State | undefined) => {
-        if (!state) {
-            throw new Error('State is required for ending property search');
-        }
-
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback
+    ) => {
         const searchManager = new PropertySearchManager(runtime);
-        const session = await searchManager.getSearchSession(message.userId);
+        await searchManager.endSearchSession(message.userId);
 
-        if (!session || session.status === "INACTIVE") {
-            return "You don't have an active property search session.";
-        }
-
-        // End the session by creating a new inactive session
-        await searchManager.createSearchSession(message.userId, {
-            status: "INACTIVE",
-            lastQuery: null,
-            results: [],
-            filters: {}
+        callback({
+            text: "Wilder World property Search session ended."
         });
-
-        return "I've ended your property search session. Let me know if you'd like to start a new search!";
+        return true;
     },
     validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
         const searchManager = new PropertySearchManager(runtime);
         const session = await searchManager.getSearchSession(message.userId);
 
-        if (!!session) {
-            searchManager.endSearchSession(message.userId);
-        }
-        /*
-        if (!session || session.status === "INACTIVE") {
+        // Only allow ending active sessions
+        if (!session || session.status !== "ACTIVE") {
             return false;
-        } */
-
+        }
+        console.log("VALIDATE endPropertySearch validated");
         return true;
-    }
+    },
 };
