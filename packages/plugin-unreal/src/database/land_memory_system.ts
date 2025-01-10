@@ -77,7 +77,8 @@ export class LandMemorySystem {
                         max: parseFloat(csvRow['Max Building Height (m)'])
                     }
                 },
-                plotArea: parseFloat(csvRow['Plot Area (m²)'])
+                plotArea: parseFloat(csvRow['Plot Area (m²)']),
+                tokenId: csvRow['tokenId'] || null
             };
 
             await this.storeProperty(metadata);

@@ -1,0 +1,633 @@
+Instructions for using Alchemy API.
+
+We have to create a script module to fetch NFT data from the Alchemy API.
+
+For reference:
+API key = yAe_o7yc1FGFMeUGIMLB-uKGkeVGP96W
+
+contract address = 0xd396ca541F501f5D303166C509e2045848df356b
+
+Each api request is limited to 100 NFTs.
+
+The inital call to the API looks like this:
+
+---------------------------------
+const options = {method: 'GET', headers: {accept: 'application/json'}};
+
+fetch('https://eth-mainnet.g.alchemy.com/nft/v3/yAe_o7yc1FGFMeUGIMLB-uKGkeVGP96W/getNFTsForContract?contractAddress=0xd396ca541F501f5D303166C509e2045848df356b&withMetadata=true&limit=4444', options)
+  .then(res => res.json())
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+-----------------------------------------
+
+The reponses will contain a JSON object with the following structure:
+{
+  "nfts": [
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "113755757540350875448695363832132768652571656236860746158748869006827731384",
+      "tokenType": "ERC721",
+      "name": "LM-152",
+      "description": "Little Meow is located in Wiami and is known for its grassroots movements and community-focused spirit. It serves as a recruitment and training ground for the Wilders, who resist the control of The Forum. This district is characterized by its futuristic stores specializing in training centers for combat and martial arts and racing garages. Little Meow is a hub for entertainment and tourism, featuring theaters, cafes, martial arts schools, and racing clubs, all contributing to its dynamic and rebellious atmosphere.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113755757540350875448695363832132768652571656236860746158748869006827731384.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "contentType": "image/png",
+        "size": 1523286,
+        "originalUrl": "https://arweave.net/uOqNmJ0C5TwgrUZIO_m-PzYoz3asImnNJ4NpdVxzrXY"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113755757540350875448695363832132768652571656236860746158748869006827731384.json",
+        "metadata": {
+          "name": "LM-152",
+          "image": "ar://uOqNmJ0C5TwgrUZIO_m-PzYoz3asImnNJ4NpdVxzrXY",
+          "description": "Little Meow is located in Wiami and is known for its grassroots movements and community-focused spirit. It serves as a recruitment and training ground for the Wilders, who resist the control of The Forum. This district is characterized by its futuristic stores specializing in training centers for combat and martial arts and racing garages. Little Meow is a hub for entertainment and tourism, featuring theaters, cafes, martial arts schools, and racing clubs, all contributing to its dynamic and rebellious atmosphere.",
+          "animation_url": "ar://mUSi58HPsp3a5D6UoNpcCis6dwJ_71GEq2IsuEl_vMc",
+          "attributes": [
+            {
+              "value": "Little Meow",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Medium",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "2",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "3",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+      "collection": {
+        "name": "Wilder Land: The Island",
+        "slug": "wilder-land-the-island",
+        "externalUrl": null,
+        "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format"
+      },
+      "mint": {
+        "mintAddress": null,
+        "blockNumber": null,
+        "timestamp": null,
+        "transactionHash": null
+      },
+      "owners": null,
+      "timeLastUpdated": "2024-11-13T16:00:25.666Z"
+    },
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "113788461262856827367970914258155040266307074739669046538854548931552513696",
+      "tokenType": "ERC721",
+      "name": "NS-177",
+      "description": "North Star is located at the northernmost tip of the island in Wiami and is an upscale residential neighborhood. Known for its refined living and serene environment, it features elegant homes and high-end shops, offering a sophisticated lifestyle for its residents. This neighborhood combines exclusivity with convenience, providing a peaceful escape from the city while remaining connected to the vibrant culture of Wiami.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113788461262856827367970914258155040266307074739669046538854548931552513696.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "contentType": "image/png",
+        "size": 1503216,
+        "originalUrl": "https://arweave.net/Uh5RzQmT1AMsLbxiQLchKfnkZ16_6jPQO9efEb9BiYI"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113788461262856827367970914258155040266307074739669046538854548931552513696.json",
+        "metadata": {
+          "name": "NS-177",
+          "image": "ar://Uh5RzQmT1AMsLbxiQLchKfnkZ16_6jPQO9efEb9BiYI",
+          "description": "North Star is located at the northernmost tip of the island in Wiami and is an upscale residential neighborhood. Known for its refined living and serene environment, it features elegant homes and high-end shops, offering a sophisticated lifestyle for its residents. This neighborhood combines exclusivity with convenience, providing a peaceful escape from the city while remaining connected to the vibrant culture of Wiami.",
+          "animation_url": "ar://bJpIQeG8F3d3OE7TawZR8zzmmFhKYWzugZsdg0YrveQ",
+          "attributes": [
+            {
+              "value": "North Star",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Close",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "3",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "4",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+
+From this data, we extract the data
+      "tokenId": "113755757540350875448695363832132768652571656236860746158748869006827731384",
+      "name": "LM-152",
+
+into a "NFTdata" object, and push it onto the array
+
+the results are limited to 100 records.  each results metadata object (except the final one) will contain at the bottom this value:
+  "pageKey": "0x05afcfce70ced9a48a793a3a357a70f1903aa7f3bca3d61d9a870a57f0d6b1e0"
+
+we then call the same API with the pageKey as the startToken, to aquire the next 100 records.
+
+example subsequent API call:
+---------------------------------
+const options = {method: 'GET', headers: {accept: 'application/json'}};
+
+fetch('https://eth-mainnet.g.alchemy.com/nft/v3/yAe_o7yc1FGFMeUGIMLB-uKGkeVGP96W/getNFTsForContract?contractAddress=0xd396ca541F501f5D303166C509e2045848df356b&withMetadata=true&startToken=0x05afcfce70ced9a48a793a3a357a70f1903aa7f3bca3d61d9a870a57f0d6b1e0&limit=4444', options)
+  .then(res => res.json())
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+------------------------------------------
+
+JSON OBJECT response example (results truncated, expect 100 records per call):
+{
+  "nfts": [
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "113755757540350875448695363832132768652571656236860746158748869006827731384",
+      "tokenType": "ERC721",
+      "name": "LM-152",
+      "description": "Little Meow is located in Wiami and is known for its grassroots movements and community-focused spirit. It serves as a recruitment and training ground for the Wilders, who resist the control of The Forum. This district is characterized by its futuristic stores specializing in training centers for combat and martial arts and racing garages. Little Meow is a hub for entertainment and tourism, featuring theaters, cafes, martial arts schools, and racing clubs, all contributing to its dynamic and rebellious atmosphere.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113755757540350875448695363832132768652571656236860746158748869006827731384.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/d822ae8b49f8a1eaddc35215c6fc8512",
+        "contentType": "image/png",
+        "size": 1523286,
+        "originalUrl": "https://arweave.net/uOqNmJ0C5TwgrUZIO_m-PzYoz3asImnNJ4NpdVxzrXY"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113755757540350875448695363832132768652571656236860746158748869006827731384.json",
+        "metadata": {
+          "name": "LM-152",
+          "image": "ar://uOqNmJ0C5TwgrUZIO_m-PzYoz3asImnNJ4NpdVxzrXY",
+          "description": "Little Meow is located in Wiami and is known for its grassroots movements and community-focused spirit. It serves as a recruitment and training ground for the Wilders, who resist the control of The Forum. This district is characterized by its futuristic stores specializing in training centers for combat and martial arts and racing garages. Little Meow is a hub for entertainment and tourism, featuring theaters, cafes, martial arts schools, and racing clubs, all contributing to its dynamic and rebellious atmosphere.",
+          "animation_url": "ar://mUSi58HPsp3a5D6UoNpcCis6dwJ_71GEq2IsuEl_vMc",
+          "attributes": [
+            {
+              "value": "Little Meow",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Medium",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "2",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "3",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+      "collection": {
+        "name": "Wilder Land: The Island",
+        "slug": "wilder-land-the-island",
+        "externalUrl": null,
+        "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format"
+      },
+      "mint": {
+        "mintAddress": null,
+        "blockNumber": null,
+        "timestamp": null,
+        "transactionHash": null
+      },
+      "owners": null,
+      "timeLastUpdated": "2024-11-13T16:00:25.666Z"
+    },
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "113788461262856827367970914258155040266307074739669046538854548931552513696",
+      "tokenType": "ERC721",
+      "name": "NS-177",
+      "description": "North Star is located at the northernmost tip of the island in Wiami and is an upscale residential neighborhood. Known for its refined living and serene environment, it features elegant homes and high-end shops, offering a sophisticated lifestyle for its residents. This neighborhood combines exclusivity with convenience, providing a peaceful escape from the city while remaining connected to the vibrant culture of Wiami.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113788461262856827367970914258155040266307074739669046538854548931552513696.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/473d3497b6a03b5219be3360c8b71755",
+        "contentType": "image/png",
+        "size": 1503216,
+        "originalUrl": "https://arweave.net/Uh5RzQmT1AMsLbxiQLchKfnkZ16_6jPQO9efEb9BiYI"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/113788461262856827367970914258155040266307074739669046538854548931552513696.json",
+        "metadata": {
+          "name": "NS-177",
+          "image": "ar://Uh5RzQmT1AMsLbxiQLchKfnkZ16_6jPQO9efEb9BiYI",
+          "description": "North Star is located at the northernmost tip of the island in Wiami and is an upscale residential neighborhood. Known for its refined living and serene environment, it features elegant homes and high-end shops, offering a sophisticated lifestyle for its residents. This neighborhood combines exclusivity with convenience, providing a peaceful escape from the city while remaining connected to the vibrant culture of Wiami.",
+          "animation_url": "ar://bJpIQeG8F3d3OE7TawZR8zzmmFhKYWzugZsdg0YrveQ",
+          "attributes": [
+            {
+              "value": "North Star",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Close",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "3",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "4",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+      "collection": {
+        "name": "Wilder Land: The Island",
+        "slug": "wilder-land-the-island",
+        "externalUrl": null,
+        "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format"
+      },
+      "mint": {
+        "mintAddress": null,
+        "blockNumber": null,
+        "timestamp": null,
+        "transactionHash": null
+      },
+      "owners": null,
+      "timeLastUpdated": "2024-12-04T06:39:40.636Z"
+    },
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "2386484720861347190881494879277638900707800383365869946624162904896778830784",
+      "tokenType": "ERC721",
+      "name": "HH-155",
+      "description": "Haven Heights is located between District ZERO and Little Meow on the island of Wiami. It is a vibrant and multifaceted district that combines residential spaces with a variety of production and creative studios. This area is characterized by its blend of innovation and artistry, automotive dealerships, fashion studios and cutting-edge cybernetic production facilities. Haven Heights is a hub for craftsmanship and technological advancement, supporting the development of advanced equipment and fostering a thriving community atmosphere.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/2386484720861347190881494879277638900707800383365869946624162904896778830784.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/1464edeeb0caaac7c6c2ee7b90155154",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/1464edeeb0caaac7c6c2ee7b90155154",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/1464edeeb0caaac7c6c2ee7b90155154",
+        "contentType": "image/png",
+        "size": 1516292,
+        "originalUrl": "https://arweave.net/XAXViNZFrT8IWI7GqEGJCChslV-bQl3mCqfqQUALA4U"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/2386484720861347190881494879277638900707800383365869946624162904896778830784.json",
+        "metadata": {
+          "name": "HH-155",
+          "image": "ar://XAXViNZFrT8IWI7GqEGJCChslV-bQl3mCqfqQUALA4U",
+          "description": "Haven Heights is located between District ZERO and Little Meow on the island of Wiami. It is a vibrant and multifaceted district that combines residential spaces with a variety of production and creative studios. This area is characterized by its blend of innovation and artistry, automotive dealerships, fashion studios and cutting-edge cybernetic production facilities. Haven Heights is a hub for craftsmanship and technological advancement, supporting the development of advanced equipment and fostering a thriving community atmosphere.",
+          "animation_url": "ar://UtloWiitt1rVwwNJj4fJnOvYPXmerOX7fWqzWVSb7mo",
+          "attributes": [
+            {
+              "value": "Haven Heights",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "6",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "7",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+      "collection": {
+        "name": "Wilder Land: The Island",
+        "slug": "wilder-land-the-island",
+        "externalUrl": null,
+        "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format"
+      },
+      "mint": {
+        "mintAddress": null,
+        "blockNumber": null,
+        "timestamp": null,
+        "transactionHash": null
+      },
+      "owners": null,
+      "timeLastUpdated": "2024-11-13T16:00:38.551Z"
+    },
+    {
+      "contract": {
+        "address": "0xd396ca541F501f5D303166C509e2045848df356b",
+        "name": "Wilder Land: The Island",
+        "symbol": "WIAMI",
+        "totalSupply": null,
+        "tokenType": "ERC721",
+        "contractDeployer": "0xcC0cbAc4828D0402d7fD6dEE953E055052755a3E",
+        "deployedBlockNumber": 21091050,
+        "openSeaMetadata": {
+          "floorPrice": null,
+          "collectionName": "Wilder Land: The Island",
+          "collectionSlug": "wilder-land-the-island",
+          "safelistRequestStatus": "approved",
+          "imageUrl": "https://i.seadn.io/s/raw/files/babb32707a586f79881b085c56c84291.png?w=500&auto=format",
+          "description": "The Island is the first fully explorable area in Wilder World, featuring a vast digital metropolis spread across 8 distinct neighborhoods that offer diverse gameplay, exploration, art and nature. Zoning on the Island is divided into residential, commercial, industrial and mixed-use areas, allowing Wilders to develop properties for experiences, living, commerce and crafting within the evolving open world of Wiami.",
+          "externalUrl": null,
+          "twitterUsername": null,
+          "discordUrl": null,
+          "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format",
+          "lastIngestedAt": "2025-01-04T21:35:31.000Z"
+        },
+        "isSpam": null,
+        "spamClassifications": []
+      },
+      "tokenId": "2446742040508885382185266421059284963938573996664648471960789553945409566968",
+      "tokenType": "ERC721",
+      "name": "HH-545",
+      "description": "Haven Heights is located between District ZERO and Little Meow on the island of Wiami. It is a vibrant and multifaceted district that combines residential spaces with a variety of production and creative studios. This area is characterized by its blend of innovation and artistry, automotive dealerships, fashion studios and cutting-edge cybernetic production facilities. Haven Heights is a hub for craftsmanship and technological advancement, supporting the development of advanced equipment and fostering a thriving community atmosphere.",
+      "tokenUri": "https://arweave.net/C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/2446742040508885382185266421059284963938573996664648471960789553945409566968.json",
+      "image": {
+        "cachedUrl": "https://nft-cdn.alchemy.com/eth-mainnet/6c18989f059c802889d6c9658fb15554",
+        "thumbnailUrl": "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/6c18989f059c802889d6c9658fb15554",
+        "pngUrl": "https://res.cloudinary.com/alchemyapi/image/upload/convert-png/eth-mainnet/6c18989f059c802889d6c9658fb15554",
+        "contentType": "image/png",
+        "size": 1516292,
+        "originalUrl": "https://arweave.net/XAXViNZFrT8IWI7GqEGJCChslV-bQl3mCqfqQUALA4U"
+      },
+      "raw": {
+        "tokenUri": "ar://C-ukHiVDE_twDYirdiEZOH-Bjd4JdzjYbPn0Q84_SOA/2446742040508885382185266421059284963938573996664648471960789553945409566968.json",
+        "metadata": {
+          "name": "HH-545",
+          "image": "ar://XAXViNZFrT8IWI7GqEGJCChslV-bQl3mCqfqQUALA4U",
+          "description": "Haven Heights is located between District ZERO and Little Meow on the island of Wiami. It is a vibrant and multifaceted district that combines residential spaces with a variety of production and creative studios. This area is characterized by its blend of innovation and artistry, automotive dealerships, fashion studios and cutting-edge cybernetic production facilities. Haven Heights is a hub for craftsmanship and technological advancement, supporting the development of advanced equipment and fostering a thriving community atmosphere.",
+          "animation_url": "ar://nHbeg3Wwva2pP0J-NDYodXMcK3ZwCgIX7961-4qKcIQ",
+          "attributes": [
+            {
+              "value": "Haven Heights",
+              "trait_type": "Neighborhood"
+            },
+            {
+              "value": "Residential",
+              "trait_type": "Zoning Type"
+            },
+            {
+              "value": "Nano",
+              "trait_type": "Plot Size"
+            },
+            {
+              "value": "Lowrise",
+              "trait_type": "Building Size"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Ocean"
+            },
+            {
+              "value": "Far",
+              "trait_type": "Distance To Bay"
+            },
+            {
+              "display_type": "number",
+              "value": "3",
+              "trait_type": "Min # Of Floors"
+            },
+            {
+              "display_type": "number",
+              "value": "4",
+              "trait_type": "Max # Of Floors"
+            }
+          ]
+        },
+        "error": null
+      },
+      "collection": {
+        "name": "Wilder Land: The Island",
+        "slug": "wilder-land-the-island",
+        "externalUrl": null,
+        "bannerImageUrl": "https://i.seadn.io/s/raw/files/6bf91f1b69491bae5a0776a1f8a19007.png?w=500&auto=format"
+      },
+      "mint": {
+        "mintAddress": null,
+        "blockNumber": null,
+        "timestamp": null,
+        "transactionHash": null
+      },
+      "owners": null,
+      "timeLastUpdated": "2024-11-13T16:00:37.823Z"
+    }
+  ],
+  "pageKey": "0x05afcfce70ced9a48a793a3a357a70f1903aa7f3bca3d61d9a870a57f0d6b1e0"
+}
+

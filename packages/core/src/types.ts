@@ -865,8 +865,9 @@ export interface IDatabaseAdapter {
 
     createMemory(
         memory: Memory,
-        tableName: string,
-        unique?: boolean
+        type: string,
+        unique?: boolean,
+        dbTable?: string
     ): Promise<void>;
 
     removeMemory(memoryId: UUID, tableName: string): Promise<void>;

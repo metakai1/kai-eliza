@@ -1,0 +1,1425 @@
+Project Path: src
+
+Source Tree:
+
+```
+src
+├── index.ts
+├── searchContextProvider.ts
+├── types.ts
+├── interfaces
+│   └── ILandDataProvider.ts
+├── initialSearchAction.ts
+├── endSearchAction.ts
+├── database
+│   ├── land_memory_system.ts
+│   └── land_database_adapter.ts
+├── nft
+│   ├── types_NFT.ts
+│   └── ReservoirAPI.ts
+├── searchManager.ts
+├── adapters
+│   └── PostgresLandDataProvider.ts
+└── searchProcessingAction.ts
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/index.ts`:
+
+```ts
+import { unrealAgentAction } from "./actions";
+import { startPropertySearch } from "./initialSearchAction";
+import { processPropertySearch } from "./searchProcessingAction";
+import { endPropertySearch } from "./endSearchAction";
+import { factEvaluator } from "./evaluators";
+import { propertySearchProvider } from "./searchContextProvider";
+import { Plugin } from "@ai16z/eliza";
+import { PropertySearchManager } from "./searchManager";
+import { PostgresLandDataProvider } from "./adapters/PostgresLandDataProvider";
+import { DistanceCategory, SearchMetadata } from "./types";
+import { LandDatabaseAdapter } from "./database/land_database_adapter";
+
+export { PostgresDatabaseAdapter } from '@ai16z/adapter-postgres'
+export *  from "./types";
+export * as actions from "./actions";
+export * as providers from "./providers";
+export { PropertySearchManager } from "./searchManager";
+export { PostgresLandDataProvider } from "./adapters/PostgresLandDataProvider";
+export { SearchMetadata } from "./types";
+export { LandDatabaseAdapter} from "./database/land_database_adapter"
+//export { Post}
+export const unrealPlugin: Plugin = {
+    name: "unreal",
+    description: "Unreal Agent with basic actions and evaluators",
+    actions: [startPropertySearch, processPropertySearch, endPropertySearch],
+    evaluators: [],
+    providers: [propertySearchProvider],
+};
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/searchContextProvider.ts`:
+
+```ts
+import { Provider } from "@ai16z/eliza";
+import { PropertySearchManager, SearchSession } from "./searchManager";
+import { LandPlotMemory, LandSearchParams } from "./types";
+
+
+export const propertySearchProvider: Provider = {
+    get: async (runtime, message) => {
+        const searchManager = new PropertySearchManager(runtime);
+
+        const session = await searchManager.getSearchSession(message.userId);
+
+        if (!session || session.status === "INACTIVE") {
+            return "\nThe user has not started a Wilder World property search session.\n";
+        }
+
+        let context = `\n# Wilder World propery search session:\n
+The user is currently searching for Wilder World properties. Current property search session:\n`;
+
+        if (session.lastQuery) {
+            context += `Last search: "${session.lastQuery}"\n`;
+        }
+
+        if (session.results.length > 0) {
+            context += `Found ${session.results.length} properties in last search.\n`;
+            const neighborhoods = [...new Set(session.results.map(r => r.content.metadata.neighborhood))];
+            context += `Properties found in: ${neighborhoods.join(", ")}\n`;
+
+            const zoningTypes = [...new Set(session.results.map(r => r.content.metadata.zoning))];
+            context += `Zoning types: ${zoningTypes.join(", ")}\n`;
+        }
+
+        if (Object.keys(session.filters).length > 0) {
+            context += `\nActive filters:\n`;
+            const filters = session.filters;
+
+            if (filters.neighborhoods?.length) {
+                context += `- Neighborhoods: ${filters.neighborhoods.join(", ")}\n`;
+            }
+            if (filters.zoningTypes?.length) {
+                context += `- Zoning types: ${filters.zoningTypes.join(", ")}\n`;
+            }
+            if (filters.plotSizes?.length) {
+                context += `- Plot sizes: ${filters.plotSizes.join(", ")}\n`;
+            }
+            if (filters.buildingTypes?.length) {
+                context += `- Building types: ${filters.buildingTypes.join(", ")}\n`;
+            }
+            if (filters.distances?.ocean) {
+                context += `- Max ocean distance: ${filters.distances.ocean.maxMeters}m\n`;
+            }
+            if (filters.distances?.bay) {
+                context += `- Max bay distance: ${filters.distances.bay.maxMeters}m\n`;
+            }
+            if (filters.building?.floors) {
+                const { min, max } = filters.building.floors;
+                context += `- Floors: ${min || '0'}-${max || 'unlimited'}\n`;
+            }
+            if (filters.rarity?.rankRange) {
+                const { min, max } = filters.rarity.rankRange;
+                context += `- Rank range: ${min || '0'}-${max || 'unlimited'}\n`;
+            }
+        }
+
+        return context;
+    }
+};
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/types.ts`:
+
+```ts
+import { Memory, UUID } from "@ai16z/eliza";
+import { z } from "zod";
+
+export enum PlotSize {
+    Nano = 'Nano',
+    Micro = 'Micro',
+    Mini = 'Mini',
+    Mid = 'Mid',
+    Macro = 'Macro',
+    Mega = 'Mega',
+    Mammoth = 'Mammoth',
+    Giga = 'Giga'
+}
+
+export enum ZoningType {
+    Residential = 'Residential',
+    Commercial = 'Commercial',
+    Industrial = 'Industrial',
+    Mixed = 'Mixed Use',  // Note: Changed to "Mixed Use"
+    Legendary = 'Legendary'
+}
+
+export enum BuildingType {
+    Lowrise = 'Lowrise',    // 2-20 floors
+    Midrise = 'Midrise',    // 21-35 floors
+    Highrise = 'Highrise',  // 36-65 floors
+    Tall = 'Tall',          // 66-80 floors
+    Supertall = 'Supertall',// 81-100 floors
+    Megatall = 'Megatall'   // 100+ floors
+}
+
+export enum DistanceCategory {
+    Close = 'Close',    // 0-300m
+    Medium = 'Medium',  // 301-700m
+    Far = 'Far'        // 701m+
+}
+
+export interface LandPlotMetadata {
+    rank: number;
+    name: string;
+    neighborhood: string;
+    zoning: ZoningType;
+    plotSize: PlotSize;
+    buildingType: BuildingType;
+    distances: {
+        ocean: {
+            meters: number;
+            category: DistanceCategory;
+        };
+        bay: {
+            meters: number;
+            category: DistanceCategory;
+        };
+    };
+    building: {
+        floors: {
+            min: number;
+            max: number;
+        };
+        height: {
+            min: number;
+            max: number;
+        };
+    };
+    plotArea: number;
+}
+
+export interface LandPlotMemory extends Memory {
+    id: UUID;
+    content: {
+        text: string;
+        metadata: LandPlotMetadata;
+        source?: UUID;  // Optional source UUID to track origin of fragments
+    };
+}
+
+export interface LandSearchParams {
+    roomId?: UUID;
+    agentId?: UUID;
+    names?: string[];
+    neighborhoods?: string[];
+    zoningTypes?: ZoningType[];
+    plotSizes?: PlotSize[];
+    buildingTypes?: BuildingType[];
+    distances?: {
+        ocean?: {
+            maxMeters?: number;
+            category?: DistanceCategory;
+        };
+        bay?: {
+            maxMeters?: number;
+            category?: DistanceCategory;
+        };
+    };
+    building?: {
+        floors?: {
+            min?: number;
+            max?: number;
+        };
+        height?: {
+            min?: number;
+            max?: number;
+        };
+    };
+    rarity?: {
+        rankRange?: {
+            min?: number;
+            max?: number;
+        };
+    };
+}
+
+export interface LandKnowledgeItem {
+    id: UUID;
+    content: {
+        text: string;
+        metadata: any;
+    };
+}
+
+export interface SearchSession {
+    status: "ACTIVE" | "INACTIVE";
+    lastQuery: string | null;
+    results: any[];
+    filters: Record<string, any>;
+}
+
+// Zod schema for search metadata
+export const SearchMetadataSchema = z.object({
+    searchText: z.string(),
+    metadata: z.object({
+        names: z.array(z.string()).optional(),
+        neighborhoods: z.array(z.string()).optional(),
+        zoningTypes: z.array(z.nativeEnum(ZoningType)).optional(),
+        plotSizes: z.array(z.nativeEnum(PlotSize)).optional(),
+        buildingTypes: z.array(z.nativeEnum(BuildingType)).optional(),
+        distances: z.object({
+            ocean: z.object({
+                maxMeters: z.number().optional(),
+                category: z.nativeEnum(DistanceCategory).optional()
+            }).optional(),
+            bay: z.object({
+                maxMeters: z.number().optional(),
+                category: z.nativeEnum(DistanceCategory).optional()
+            }).optional()
+        }).optional(),
+        building: z.object({
+            floors: z.object({
+                min: z.number().optional(),
+                max: z.number().optional()
+            }).optional(),
+            height: z.object({
+                min: z.number().optional(),
+                max: z.number().optional()
+            }).optional()
+        }).optional(),
+        rarity: z.object({
+            rankRange: z.object({
+                min: z.number().optional(),
+                max: z.number().optional()
+            }).optional()
+        }).optional()
+    })
+});
+
+export type SearchMetadata = z.infer<typeof SearchMetadataSchema>;
+
+// Constants
+export const AGENT_ID: `${string}-${string}-${string}-${string}-${string}` = '1459b245-2171-02f6-b436-c3c2641848e5';
+export const LAND_TABLE = 'land_table';
+export const LAND_ROOM_ID = AGENT_ID;
+export const LAND_AGENT_ID = AGENT_ID;
+export const LAND_USER_ID = AGENT_ID;
+export const DEFAULT_MATCH_THRESHOLD = 0.4;
+export const DEFAULT_MATCH_COUNT = 20;
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/interfaces/ILandDataProvider.ts`:
+
+```ts
+import { LandPlotMemory, LandSearchParams } from '../types';
+import { UUID } from '@ai16z/eliza';
+
+export interface ILandDataProvider {
+    createLandMemory(memory: LandPlotMemory): Promise<void>;
+    getLandMemories(roomId: UUID): Promise<LandPlotMemory[]>;
+    //removeAllLandMemories(roomId: UUID): Promise<void>;
+    updateLandMemory(memory: LandPlotMemory): Promise<void>;
+    searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]>;
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/initialSearchAction.ts`:
+
+```ts
+import { IAgentRuntime, Memory, State, Action, elizaLogger, HandlerCallback } from "@ai16z/eliza";
+import { PropertySearchManager } from "./searchManager";
+
+export const startPropertySearch: Action = {
+    name: "START_PROPERTY_SEARCH",
+    description: "Initiates a property search session for wilder world land properties",
+    similes: ["SEARCH_PROPERTIES", "FIND_PROPERTIES", "LOOK_FOR_PROPERTIES"],
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "I'd like to look for wilder world land properties",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "sure I'll get your search session started. What kind of property are you looking for?",
+                    action: "START_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Help me to search for Wilder World Land.",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll get your search session started.  What are you looking for?",
+                    action: "START_PROPERTY_SEARCH",
+                },
+            },
+        ],
+    ],
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        _options: any,
+        callback?: HandlerCallback
+    ): Promise<boolean> => {
+            const searchManager = new PropertySearchManager(runtime);
+
+            // In initialSearchAction.ts, replace the session initialization code with:
+            await searchManager.initializeNewSearchSession(message.userId);
+
+            const responseMsg = {
+                text: `I'm ready to help you search for properties. What kind of property
+ are you looking for? `,
+                //content: {
+                //    action: "START_PROPERTY_SEARCH",
+                //}
+            };
+
+
+            callback(responseMsg);
+
+            return true;
+    },
+    validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+        try {
+            const searchManager = new PropertySearchManager(runtime);
+            const userId = message.userId;
+
+            // check if an active search session exists for the user
+            const searchSession = await searchManager.getSearchSession(userId);
+
+            if (searchSession?.status === "ACTIVE") {
+                elizaLogger.info("An active search session already exists for the user.");
+                return false;
+            }
+            console.log("VALIDATE startPropertySearch validated");
+
+            return true;
+        } catch (error) {
+            elizaLogger.error("Failed to validate property search:", error);
+            return false;
+        }
+    }
+}
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/endSearchAction.ts`:
+
+```ts
+import { IAgentRuntime, Memory, State, Action, elizaLogger, HandlerCallback } from "@ai16z/eliza";
+import { PropertySearchManager } from "./searchManager";
+
+export const endPropertySearch: Action = {
+    name: "END_PROPERTY_SEARCH",
+    description: "Ends the current property search session",
+    similes: ["STOP_SEARCH", "END_SEARCH", "FINISH_SEARCH", "CANCEL_SEARCH"],
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "I'm done searching for properties",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I've ended your property search session. Let me know if you'd like to start a new search!",
+                    action: "END_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "End my property search",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I've cancelled your property search session. Feel free to start a new search anytime!",
+                    action: "END_PROPERTY_SEARCH",
+                },
+            },
+        ],
+    ],
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback
+    ) => {
+        const searchManager = new PropertySearchManager(runtime);
+        await searchManager.endSearchSession(message.userId);
+
+        callback({
+            text: "Wilder World property Search session ended."
+        });
+        return true;
+    },
+    validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+        const searchManager = new PropertySearchManager(runtime);
+        const session = await searchManager.getSearchSession(message.userId);
+
+        // Only allow ending active sessions
+        if (!session || session.status !== "ACTIVE") {
+            return false;
+        }
+        console.log("VALIDATE endPropertySearch validated");
+        return true;
+    },
+};
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/database/land_memory_system.ts`:
+
+```ts
+import { elizaLogger, UUID, stringToUuid, splitChunks } from "@ai16z/eliza";
+import { LandPlotMemory,
+    LandSearchParams,
+    DEFAULT_MATCH_COUNT,
+    LandKnowledgeItem,
+    LandPlotMetadata,
+    ZoningType,
+    PlotSize,
+    BuildingType,
+    DistanceCategory,
+    LAND_TABLE
+} from "../types";
+import { LAND_ROOM_ID, LAND_AGENT_ID, AGENT_ID } from "../types";
+import { v4 as uuidv4 } from 'uuid';
+import { ILandDataProvider } from '../interfaces/ILandDataProvider';
+
+export const LAND_QUERY_SYSTEM_PROMPT = `
+You are a real estate search assistant for a futuristic city. Convert natural language queries into structured search parameters.
+
+Given a user query, respond with a JSON object containing:
+1. A natural language description for embedding matching
+2. Search metadata parameters
+
+Example Response Format:
+{
+    "searchText": "Large plot in Nexus neighborhood close to ocean with tall building potential",
+    "metadata": {
+        "neighborhood": "Nexus",
+        "minPlotArea": 5000,
+        "maxOceanDistance": 500,
+        "minFloors": 50
+    }
+}
+
+Keep the searchText natural and descriptive while being specific about requirements.
+`;
+
+export class LandMemorySystem {
+    private readonly roomId: UUID = LAND_ROOM_ID;
+    private readonly agentId: UUID = LAND_AGENT_ID;
+    private readonly userId: UUID = AGENT_ID;
+
+    constructor(
+        private readonly dataProvider: ILandDataProvider,
+    ) {}
+
+/*     async removeAllLandMemories(): Promise<void> {
+        await this.dataProvider.removeAllLandMemories(this.roomId);
+    }
+ */
+    async createLandMemoryFromCSV(csvRow: any): Promise<void> {
+        try {
+            const metadata: LandPlotMetadata = {
+                rank: parseInt(csvRow['Rank']),
+                name: csvRow['Name'],
+                neighborhood: csvRow['Neighborhood'],
+                zoning: csvRow['Zoning Type'],
+                plotSize: csvRow['Plot Size'],
+                buildingType: csvRow['Building Size'],
+                distances: {
+                    ocean: {
+                        meters: parseInt(csvRow['Distance to Ocean (m)']),
+                        category: csvRow['Distance to Ocean']
+                    },
+                    bay: {
+                        meters: parseInt(csvRow['Distance to Bay (m)']),
+                        category: csvRow['Distance to Bay']
+                    }
+                },
+                building: {
+                    floors: {
+                        min: parseInt(csvRow['Min # of Floors']),
+                        max: parseInt(csvRow['Max # of Floors'])
+                    },
+                    height: {
+                        min: parseFloat(csvRow['Min Building Height (m)']),
+                        max: parseFloat(csvRow['Max Building Height (m)'])
+                    }
+                },
+                plotArea: parseFloat(csvRow['Plot Area (m²)'])
+            };
+
+            await this.storeProperty(metadata);
+        } catch (error) {
+            elizaLogger.error('Error creating land memory:', {
+                error: error instanceof Error ? error.message : String(error),
+                csvRow
+            });
+            throw error;
+        }
+    }
+
+    async searchPropertiesByParams(searchParams: Partial<LandSearchParams> = {}): Promise<LandPlotMemory[]> {
+        const results = await this.dataProvider.searchLandByMetadata(searchParams);
+        return results;
+    }
+
+    async mockSearchPropertiesByParams(searchParams: Partial<LandSearchParams> = {}): Promise<LandPlotMemory[]> {
+        const mockProperty: LandPlotMemory = {
+            id: '94e9f251-1ec7-0bde-b9cc-0fffa695eebf',
+            content: {
+                text: 'Oceanview Residence is a Large Residential plot in Coastal District. It is located 150m from the ocean and 2000m from the bay. The building can have between 5 and 8 floors, with heights from 15m to 24m. The plot area is 2500m².',
+                metadata: {
+                    name: 'Oceanview Residence',
+                    rank: 1,
+                    zoning: ZoningType.Residential,
+                    building: {
+                        floors: { max: 8, min: 5 },
+                        height: { max: 24, min: 15 }
+                    },
+                    plotArea: 2500,
+                    plotSize: PlotSize.Macro, //'Large',
+                    distances: {
+                        bay: { meters: 2000, category: DistanceCategory.Far },
+                        ocean: { meters: 150, category: DistanceCategory.Close }
+                    },
+                    buildingType: BuildingType.Midrise, //'MidRise',
+                    neighborhood: 'Coastal District'
+                }
+            },
+            userId: '1459b245-2171-02f6-b436-c3c2641848e5',
+            agentId: '1459b245-2171-02f6-b436-c3c2641848e5',
+            roomId: '1459b245-2171-02f6-b436-c3c2641848e5',
+            unique: true
+        };
+
+        return [mockProperty];
+    }
+
+    /**
+     * Get properties within a specific rarity range
+     */
+/*     async getPropertiesByRarity(
+        minRank: number,
+        maxRank: number,
+        limit: number = DEFAULT_MATCH_COUNT
+    ): Promise<LandPlotMemory[]> {
+        try {
+            const results = await this.dataProvider.getPropertiesByRarityRange(minRank, maxRank);
+            return results.slice(0, limit);
+        } catch (error) {
+            elizaLogger.error('Error getting properties by rarity:', {
+                error: error instanceof Error ? error.message : String(error),
+                minRank,
+                maxRank
+            });
+            throw error;
+        }
+    }
+ */
+    async storePropertyItem(
+        item: LandKnowledgeItem,
+        chunkSize: number = 512,
+        bleed: number = 20
+    ): Promise<UUID> {
+        try {
+            // First create the main land memory
+            const mainMemory: LandPlotMemory = {
+                id: item.id,
+                userId: this.userId,
+                agentId: this.agentId,
+                roomId: this.roomId,
+                content: item.content
+                //embedding: await this.embedder.embedText(item.content.text)
+            };
+            await this.dataProvider.createLandMemory(mainMemory);
+            return item.id;
+        } catch (error) {
+            elizaLogger.error('Error setting land knowledge:', {
+                error: error instanceof Error ? error.message : String(error),
+                item
+            });
+            throw error;
+        }
+    }
+
+
+    /**
+     * Stores a property in the land memory system
+     * @param metadata The land plot metadata to store
+     * @returns The UUID of the stored property
+     */
+    async storeProperty(metadata: LandPlotMetadata): Promise<UUID> {
+        const description = this.generatePropertyDescription(metadata);
+        const knowledgeItem: LandKnowledgeItem = {
+            id: stringToUuid(description+Date.now()),
+            content: {
+                text: description,
+                metadata: metadata
+            },
+        };
+
+        return await this.storePropertyItem(knowledgeItem);
+    }
+
+    /**
+     * Generates a natural language description of a property from its metadata
+     */
+    private generatePropertyDescription(metadata: LandPlotMetadata): string {
+        const description = `${metadata.name} is a ${metadata.plotSize} ${metadata.zoning} plot in ${metadata.neighborhood}. ` +
+            `It is located ${metadata.distances.ocean.meters}m from the ocean and ${metadata.distances.bay.meters}m from the bay. ` +
+            `The building can have between ${metadata.building.floors.min} and ${metadata.building.floors.max} floors, ` +
+            `with heights from ${metadata.building.height.min}m to ${metadata.building.height.max}m. ` +
+            `The plot area is ${metadata.plotArea}m².`;
+        return description;
+    }
+}
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/database/land_database_adapter.ts`:
+
+```ts
+import { IDatabaseAdapter } from "@ai16z/eliza";
+import { elizaLogger, UUID } from "@ai16z/eliza";
+import PostgresDatabaseAdapter from "@ai16z/adapter-postgres";
+import {
+    LandPlotMemory,
+    LandSearchParams,
+    LAND_TABLE,
+    LAND_ROOM_ID,
+    LAND_AGENT_ID,
+    DEFAULT_MATCH_THRESHOLD
+} from "../types";
+
+const LAND_MEMORY_TYPE = 'land_plot';
+
+export class LandDatabaseAdapter {
+    private dbAdapter: IDatabaseAdapter;
+
+    constructor(configOrAdapter: IDatabaseAdapter) {
+        this.dbAdapter = configOrAdapter;
+    }
+
+    async init(): Promise<void> {
+        await this.dbAdapter.init();
+        // Add any additional initialization specific to LandDatabaseAdapter if needed
+    }
+
+    async createLandMemory(memory: LandPlotMemory): Promise<void> {
+        console.log("Creating land memory with :", memory.content.metadata.name);
+        // await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
+    }
+
+    async getLandMemoryById(id: UUID): Promise<LandPlotMemory | undefined> {
+        const memory = null //await this.dbAdapter.getMemoryById(id, LAND_MEMORY_TYPE, LAND_TABLE);
+        if (!memory) return undefined;
+        return memory as LandPlotMemory;
+    }
+
+    async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
+/*         const memories = await this.dbAdapter.getMemories({
+            roomId,
+            tableName: LAND_MEMORY_TYPE,
+            dbTable: LAND_TABLE
+        });
+        return memories as LandPlotMemory[]; */
+        return null
+    }
+
+/*     async removeLandMemory(memoryId: UUID): Promise<void> {
+        await this.dbAdapter.removeMemory(memoryId, LAND_MEMORY_TYPE, LAND_TABLE);
+    }
+
+    async removeAllLandMemories(roomId: UUID): Promise<void> {
+        await this.dbAdapter.removeAllMemories(roomId, LAND_MEMORY_TYPE, LAND_TABLE);
+    } */
+
+    async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
+        let sql = `
+            SELECT * FROM ${LAND_TABLE}
+            WHERE type = $1
+            AND content IS NOT NULL
+        `;
+        const values: any[] = [LAND_MEMORY_TYPE];
+        let paramCount = 1;
+
+        // Add names condition
+        if (params.names?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'name' = ANY($${paramCount}::text[])`;
+            values.push(params.names);
+        }
+
+        if (params.neighborhoods?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'neighborhood' = ANY($${paramCount}::text[])`;
+            values.push(params.neighborhoods);
+        }
+
+        if (params.zoningTypes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'zoning' = ANY($${paramCount}::text[])`;
+            values.push(params.zoningTypes);
+        }
+
+        if (params.plotSizes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'plotSize' = ANY($${paramCount}::text[])`;
+            values.push(params.plotSizes);
+        }
+
+        if (params.buildingTypes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'buildingType' = ANY($${paramCount}::text[])`;
+            values.push(params.buildingTypes);
+        }
+
+        if (params.distances?.ocean) {
+            if (params.distances.ocean.maxMeters) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'distances'->'ocean'->>'meters')::int <= $${paramCount}`;
+                values.push(params.distances.ocean.maxMeters);
+            }
+            if (params.distances.ocean.category) {
+                paramCount++;
+                sql += ` AND content->'metadata'->'distances'->'ocean'->>'category' = $${paramCount}`;
+                values.push(params.distances.ocean.category);
+            }
+        }
+
+        if (params.distances?.bay) {
+            if (params.distances.bay.maxMeters) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'distances'->'bay'->>'meters')::int <= $${paramCount}`;
+                values.push(params.distances.bay.maxMeters);
+            }
+            if (params.distances.bay.category) {
+                paramCount++;
+                sql += ` AND content->'metadata'->'distances'->'bay'->>'category' = $${paramCount}`;
+                values.push(params.distances.bay.category);
+            }
+        }
+        if (params.building?.floors) {
+            if (params.building.floors.min) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'floors'->>'min')::int >= $${paramCount}`;
+                values.push(params.building.floors.min);
+            }
+            if (params.building.floors.max) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'floors'->>'max')::int <= $${paramCount}`;
+                values.push(params.building.floors.max);
+            }
+        }
+
+        if (params.rarity?.rankRange) {
+            if (params.rarity.rankRange.min) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->>'rank')::int >= $${paramCount}`;
+                values.push(params.rarity.rankRange.min);
+            }
+            if (params.rarity.rankRange.max) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->>'rank')::int <= $${paramCount}`;
+                values.push(params.rarity.rankRange.max);
+            }
+        }
+
+        try {
+            const { rows } = await (this.dbAdapter as PostgresDatabaseAdapter).query(sql, values);
+            return rows.map(row => ({
+                ...row,
+                content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content
+            }));
+        } catch (error) {
+            elizaLogger.error('Error in searchLandByMetadata:', {
+                error: error instanceof Error ? error.message : String(error),
+                params
+            });
+            throw error;
+        }
+    }
+
+
+    async getPropertiesByRarityRange(
+        minRank: number,
+        maxRank: number
+    ): Promise<LandPlotMemory[]> {
+        return this.searchLandByMetadata({
+            rarity: {
+                rankRange: {
+                    min: minRank,
+                    max: maxRank
+                }
+            }
+        });
+    }
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/nft/types_NFT.ts`:
+
+```ts
+export interface NFTPrice {
+    tokenId: string;
+    price: number;
+}
+
+export interface ReservoirResponse {
+    tokens: Record<string, number>;
+}
+
+export interface NFTPriceCache {
+    lastUpdated: Date;
+    prices: NFTPrice[];
+    collection: string;
+}
+
+export interface NFTPriceProvider {
+    getPricesForCollection(collectionAddress: string): Promise<NFTPrice[]>;
+    getCachedPrices(collectionAddress: string): Promise<NFTPriceCache | null>;
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/nft/ReservoirAPI.ts`:
+
+```ts
+import { NFTPrice, NFTPriceCache, NFTPriceProvider, ReservoirResponse } from './types_NFT';
+
+export class ReservoirAPI implements NFTPriceProvider {
+    private readonly apiKey: string;
+    private readonly baseUrl: string;
+    private cache: Map<string, NFTPriceCache>;
+
+    constructor(apiKey: string, baseUrl: string = 'https://api.reservoir.tools') {
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl;
+        this.cache = new Map();
+    }
+
+    private async fetchFromAPI(collectionAddress: string): Promise<ReservoirResponse> {
+        const options = {
+            method: 'GET',
+            headers: {
+                'accept': '*/*',
+                'x-api-key': this.apiKey
+            }
+        };
+
+        const response = await fetch(
+            `${this.baseUrl}/tokens/floor/v1?collection=${collectionAddress}`,
+            options
+        );
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.statusText}`);
+        }
+
+        return response.json();
+    }
+
+    async getPricesForCollection(collectionAddress: string): Promise<NFTPrice[]> {
+        try {
+            const data = await this.fetchFromAPI(collectionAddress);
+            const prices: NFTPrice[] = Object.entries(data.tokens).map(([tokenId, price]) => ({
+                tokenId,
+                price
+            }));
+
+            // Update cache
+            this.cache.set(collectionAddress, {
+                lastUpdated: new Date(),
+                prices,
+                collection: collectionAddress
+            });
+
+            return prices;
+        } catch (error) {
+            console.error('Error fetching NFT prices:', error);
+            throw error;
+        }
+    }
+
+    async getCachedPrices(collectionAddress: string): Promise<NFTPriceCache | null> {
+        return this.cache.get(collectionAddress) || null;
+    }
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/searchManager.ts`:
+
+```ts
+import { LandMemorySystem } from './database/land_memory_system';
+import { LandSearchParams, LandPlotMemory, SearchMetadata, SearchMetadataSchema, ZoningType, PlotSize, BuildingType } from './types';
+import { IAgentRuntime } from '@ai16z/eliza';
+import { PostgresLandDataProvider } from './adapters/PostgresLandDataProvider';
+import { LandDatabaseAdapter } from './database/land_database_adapter';
+import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
+import { elizaLogger } from "@ai16z/eliza";
+
+interface PropertyResult {
+    rank: number;
+    name: string;
+    neighborhood: string;
+    zoningType: string;
+    plotSize: string;
+    buildingSize: string;
+    distances: {
+        ocean: number;
+        bay: number;
+    };
+    building: {
+        floors: {
+            min: number;
+            max: number;
+        };
+        height: {
+            min: number;
+            max: number;
+        };
+    };
+    plotArea: number;
+}
+
+export interface SearchSession {
+    status: "ACTIVE" | "INACTIVE";
+    lastQuery: string | null;
+    results: LandPlotMemory[];
+    filters: Partial<LandSearchParams>;
+}
+
+export class PropertySearchManager {
+    private memorySystem: LandMemorySystem;
+
+    constructor(private runtime: IAgentRuntime) {
+        //elizaLogger.info("🚀 Initializing PropertySearchManager...");
+
+        if (!runtime.databaseAdapter) {
+            throw new Error("Database adapter not found in runtime");
+        }
+
+        //elizaLogger.info("✅ Using database adapter:", runtime.databaseAdapter.constructor.name);
+
+        const dbAdapter = new LandDatabaseAdapter(runtime.databaseAdapter);
+        const landDataProvider = new PostgresLandDataProvider(dbAdapter);
+        this.memorySystem = new LandMemorySystem(landDataProvider);
+
+        elizaLogger.info("✅ PropertySearchManager initialization complete");
+    }
+
+    async createSearchSession(userId: string, initialState: SearchSession) {
+        await this.runtime.cacheManager.set(`property-search-${userId}`, initialState);
+    }
+
+    async initializeNewSearchSession(userId: string): Promise<SearchSession> {
+        const initialSession: SearchSession = {
+            status: "ACTIVE",
+            lastQuery: null,
+            results: [],
+            filters: {}
+        };
+
+        await this.createSearchSession(userId, initialSession);
+        return initialSession;
+    }
+
+    async endSearchSession(userId: string): Promise<SearchSession | null> {
+        const session = await this.runtime.cacheManager.get<SearchSession>(
+            `property-search-${userId}`
+        );
+
+        if (session) {
+            // Update the session status to INACTIVE
+            const endedSession: SearchSession = {
+                ...session,
+                status: "INACTIVE"
+            };
+
+            // Save the updated session state
+            await this.runtime.cacheManager.set(
+                `property-search-${userId}`,
+                endedSession
+            );
+
+            return endedSession;
+        }
+
+        return null;
+    }
+
+    async getSearchSession(userId: string): Promise<SearchSession | null> {
+        const session = await this.runtime.cacheManager.get<SearchSession>(
+            `property-search-${userId}`
+        );
+        return session || null;
+    }
+
+    async updateSearchResults(userId: string, results: LandPlotMemory[]) {
+        const session = await this.getSearchSession(userId);
+        if (!session) return;
+
+        session.results = results;
+        await this.runtime.cacheManager.set(`property-search-${userId}`, session);
+    }
+
+    async executeSearch(searchMetadata: SearchMetadata): Promise<LandPlotMemory[] | null> {
+        const { metadata } = searchMetadata;
+        const searchParams: Partial<LandSearchParams> = {};
+
+        // Handle names array
+        if (metadata.names?.length) {
+            searchParams.names = metadata.names;
+        }
+        // Handle array fields with proper typing
+        if (metadata.neighborhoods?.length) {
+            searchParams.neighborhoods = metadata.neighborhoods;
+        }
+        if (metadata.zoningTypes?.length) {
+            searchParams.zoningTypes = metadata.zoningTypes as ZoningType[];
+        }
+        if (metadata.plotSizes?.length) {
+            searchParams.plotSizes = metadata.plotSizes as PlotSize[];
+        }
+        if (metadata.buildingTypes?.length) {
+            searchParams.buildingTypes = metadata.buildingTypes as BuildingType[];
+        }
+
+        // Handle distances
+        if (metadata.distances?.ocean || metadata.distances?.bay) {
+            searchParams.distances = {};
+            ['ocean', 'bay'].forEach(type => {
+                const distance = metadata.distances?.[type];
+                if (distance) {
+                    searchParams.distances![type] = {
+                        maxMeters: distance.maxMeters,
+                        category: distance.category
+                    };
+                }
+            });
+        }
+
+        // Handle building
+        if (metadata.building?.floors || metadata.building?.height) {
+            searchParams.building = {};
+            ['floors', 'height'].forEach(prop => {
+                const value = metadata.building?.[prop];
+                if (value) {
+                    searchParams.building![prop] = value;
+                }
+            });
+        }
+
+        // Handle rarity
+        if (metadata.rarity?.rankRange) {
+            searchParams.rarity = { rankRange: metadata.rarity.rankRange };
+        }
+
+        // Return null if no search parameters were defined
+        if (Object.keys(searchParams).length === 0) {
+            return null;
+        }
+
+        console.log('Search parameters:', searchParams);
+        return await this.memorySystem.searchPropertiesByParams(searchParams);
+    }
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/adapters/PostgresLandDataProvider.ts`:
+
+```ts
+import { LandDatabaseAdapter } from '../database/land_database_adapter';
+import { ILandDataProvider } from '../interfaces/ILandDataProvider';
+import { LandPlotMemory, LandSearchParams } from '../types';
+import { UUID } from '@ai16z/eliza';
+
+export class PostgresLandDataProvider implements ILandDataProvider {
+    constructor(private readonly dbAdapter: LandDatabaseAdapter) {}
+
+    async createLandMemory(memory: LandPlotMemory): Promise<void> {
+        await this.dbAdapter.createLandMemory(memory);
+    }
+
+    async getLandMemories(roomId: UUID): Promise<LandPlotMemory[]> {
+        return await this.dbAdapter.getLandMemories(roomId);
+    }
+
+/*     async removeAllLandMemories(roomId: UUID): Promise<void> {
+        await this.dbAdapter.removeAllLandMemories(roomId);
+    } */
+
+    async updateLandMemory(memory: LandPlotMemory): Promise<void> {
+        // TODO: Implement this method in LandDatabaseAdapter
+        throw new Error('Method not implemented: updateLandMemory');
+    }
+
+    async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
+        return await this.dbAdapter.searchLandByMetadata(params);
+    }
+}
+
+```
+
+`/home/kai/eliza/ke/kai-eliza/packages/plugin-unreal/src/searchProcessingAction.ts`:
+
+```ts
+import { Action, IAgentRuntime, Memory, State,
+    ModelClass,
+    composeContext,
+    generateObject,
+    generateText,
+    HandlerCallback
+} from "@ai16z/eliza";
+import * as fs from "fs";
+import * as path from "path";
+
+import { PropertySearchManager } from "./searchManager";
+//import { generateObjectV2 } from "@ai16z/eliza";
+import { LAND_QUERY_SYSTEM_PROMPT } from "./database/land_memory_system";
+import { LandPlotMemory, SearchMetadataSchema } from "./types";
+import { z } from "zod";
+
+export const processPropertySearch: Action = {
+    name: "PROCESS_PROPERTY_SEARCH",
+    similes: ["SEARCH_WILDER_LAND","LAND_SEARCH"],
+    description: "Processes a wilder world land property search in the land memory database and returns results",
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "give me all properties in space mind with a view of the ocean",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Searching for space mind properties:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "What are all legendary plots close to the bay",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Searching for legendary plots close to the bay:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "How does the plot size of FL-45 compare to other residential properties in Flashing Lights?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Analyzing plot size comparison in Flashing Lights:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "How many plots in Tranquility Gardens are close to the Ocean?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Searching for oceanfront plots in Tranquility Gardens:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Which SM property is closest to the Ocean?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Finding closest Space Mind property to ocean:",
+                    action: "PROCESS_PROPERTY_SEARCH",
+                },
+            },
+        ],
+    ],
+    handler: async (runtime: IAgentRuntime,
+        message: Memory,
+        state: State | undefined,
+        options: any,
+        callback: HandlerCallback
+    ) => {
+        if (!state) {
+            throw new Error('State is required for property search processing');
+        }
+        // read from file
+        const promptDir = path.join(process.cwd(), 'prompts');
+        const landPromptFile = path.join(promptDir, 'land_query_prompt.txt');
+        const queryPromptFile = path.join(promptDir, 'query_extraction_prompt.txt');
+
+        const searchManager = new PropertySearchManager(runtime);
+
+        const QUERY_EXTRACTION_SYSTEM_PROMPT = fs.readFileSync(
+            queryPromptFile,
+            'utf-8'
+        );
+
+        // TODO: parse recent messages to filter out very long messages
+        const recentMessages = await runtime.messageManager.getMemories({
+            roomId: message.roomId,
+            count: 6,
+        });
+        // iterate through recentMessages and filter out very long messages
+        const filteredRecentMessages = recentMessages.filter((msg) =>
+            msg.content.text.length <= 1000);
+
+        // add filtered recent messages to context
+        const context = composeContext({
+            state: {
+                ...state,
+                recentMessagesData: filteredRecentMessages
+            },
+            template: QUERY_EXTRACTION_SYSTEM_PROMPT,
+        });
+
+        //console.log("Composed context:", context);
+
+        const searchQuery = await generateText({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+        });
+
+        console.log("Generated search query:", searchQuery);
+
+        callback({
+            text: 'Asking ATLAS: ' + searchQuery
+        });
+
+        const FILE_LAND_QUERY_SYSTEM_PROMPT = fs.readFileSync(
+            landPromptFile,
+            'utf-8'
+        );
+
+        const landQueryContext = FILE_LAND_QUERY_SYSTEM_PROMPT + searchQuery;
+
+        //console.log("Land query context:", landQueryContext);
+
+        const metadataResult = await generateObject({
+            runtime,
+            context: landQueryContext,
+            modelClass: ModelClass.SMALL,
+            schema: SearchMetadataSchema,
+        });
+
+        if (!metadataResult?.object) {
+            throw new Error('Failed to generate search metadata');
+        }
+
+        console.log("Generated search metadata object: ", metadataResult.object);
+
+        // Execute search
+        const results = await searchManager.executeSearch(metadataResult.object);
+
+        if (!!results) {
+            await searchManager.updateSearchResults(message.userId, results);
+        };
+
+        // log the names of the properties in results.content.metadata.name
+        // separated by a space and a comma
+        console.log("Search results names:", results.map((result) => result.content.metadata.name).join(", "));
+
+        // Format response
+        const formattedResponse = formatSearchResults(results);
+
+        callback({
+            text: formattedResponse
+        });
+
+        return true;
+    },
+    validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+        const searchManager = new PropertySearchManager(runtime);
+        const session = await searchManager.getSearchSession(message.userId);
+
+        console.log("PROCESS_PROPERTY_SEARCH validate session status= ", session?.status);
+        console.log("#results in session= ", session?.results.length);
+        const isValid = !!session && session.status === "ACTIVE";
+        if  (isValid) {
+            console.log("VALIDATE: processPropertySearch validated");
+        }
+        return isValid;
+    }
+};
+
+function formatSearchResults(landMemories: LandPlotMemory[]): string {
+    if (landMemories.length === 0) {
+        return "I couldn't find any properties matching your criteria. Would you like to try a different search?";
+    }
+
+    let response = `I found ${landMemories.length} properties matching your criteria: (first 10 shown)\n\n`;
+
+    landMemories.slice(0, 10).forEach(property => {
+        const metadata = property.content.metadata;
+        response += `${metadata.name} in ${metadata.neighborhood}: ${metadata.zoning}  \n`;
+        response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)  ${metadata.buildingType} `;
+        response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}`;
+        response += `  |  Distance To Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category}) `;
+        response += ` To Bay: ${metadata.distances.bay.meters}m (${metadata.distances.bay.category})\n\n`;
+    });
+    return response;
+}
+
+        // Generate search metadata using LLM
+/*          const searchMetadata = (await generateObjectV2({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+            schema: SearchMetadataSchema,
+        })) as z.infer<typeof SearchMetadataSchema>; */
+
+```

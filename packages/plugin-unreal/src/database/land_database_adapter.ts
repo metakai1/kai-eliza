@@ -26,7 +26,7 @@ export class LandDatabaseAdapter {
 
     async createLandMemory(memory: LandPlotMemory): Promise<void> {
         console.log("Creating land memory with :", memory.content.metadata.name);
-        // await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
+        await this.dbAdapter.createMemory(memory, LAND_MEMORY_TYPE, true, LAND_TABLE);
     }
 
     async getLandMemoryById(id: UUID): Promise<LandPlotMemory | undefined> {
@@ -142,6 +142,13 @@ export class LandDatabaseAdapter {
                 sql += ` AND (content->'metadata'->>'rank')::int <= $${paramCount}`;
                 values.push(params.rarity.rankRange.max);
             }
+        }
+
+        // Add tokenId search condition
+        if (params.tokenId) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'tokenId' = $${paramCount}`;
+            values.push(params.tokenId);
         }
 
         try {

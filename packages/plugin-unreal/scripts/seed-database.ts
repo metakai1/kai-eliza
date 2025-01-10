@@ -33,10 +33,10 @@ async function seedDatabase() {
 
     const records: LandPlotMemory[] = [];
 
-    createReadStream('./data/land_plots.csv')
+    createReadStream('./data/land_plots_w_tokenid.csv')
         .pipe(parser)
         .on('data', async (row) => {
-            console.log('Building Size from CSV:', row['Building Size']); // Add this line
+            console.log('Processing plot:', row['Name'], 'TokenId:', row['tokenId']);
             const memory: LandPlotMemory = {
                 id: row.id,
                 userId: AGENT_ID,
@@ -71,7 +71,8 @@ async function seedDatabase() {
                                 meters: parseInt(row['Distance to Bay (m)']),
                                 category: row['Distance to Bay'] as DistanceCategory
                             }
-                        }
+                        },
+                        tokenId: row['tokenId'] || null
                     }
                 }
             };

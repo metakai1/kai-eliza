@@ -1,0 +1,25 @@
+o run these tests, you'll need to:
+
+Install test dependencies:
+Code
+
+
+npm install --save-dev jest @types/jest ts-jest
+
+
+Add test script to package.json:
+
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  }
+}
+
+Create a jest.config.js:
+
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.ts'],
+};

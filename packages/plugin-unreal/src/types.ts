@@ -1,5 +1,6 @@
 import { Memory, UUID } from "@ai16z/eliza";
 import { z } from "zod";
+import { NFTPrice } from './nft/types_NFT';
 
 export enum PlotSize {
     Nano = 'Nano',
@@ -63,6 +64,11 @@ export interface LandPlotMetadata {
         };
     };
     plotArea: number;
+    tokenId?: string;
+    nftData?: {
+        price?: number;
+        lastUpdated?: string;
+    };
 }
 
 export interface LandPlotMemory extends Memory {
@@ -74,6 +80,17 @@ export interface LandPlotMemory extends Memory {
     };
 }
 
+// Add this after the LandPlotMemory interface
+export interface LandPlotMemoryNFTmatch extends LandPlotMemory {
+    content: {
+        text: string;
+        metadata: LandPlotMetadata;
+        source?: UUID;  // Optional source UUID to track origin of fragments
+        nftPrice?: NFTPrice;  // Optional NFT price information
+        tokenId?: string
+    };
+}
+
 export interface LandSearchParams {
     roomId?: UUID;
     agentId?: UUID;
@@ -82,6 +99,7 @@ export interface LandSearchParams {
     zoningTypes?: ZoningType[];
     plotSizes?: PlotSize[];
     buildingTypes?: BuildingType[];
+    tokenId?: string;  // Add tokenId search parameter
     distances?: {
         ocean?: {
             maxMeters?: number;
