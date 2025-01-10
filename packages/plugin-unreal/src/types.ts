@@ -81,7 +81,7 @@ export interface LandPlotMemory extends Memory {
 }
 
 // Add this after the LandPlotMemory interface
-export interface LandPlotMemoryNFTmatch extends LandPlotMemory {
+export interface LandPlotMemoryNFT extends LandPlotMemory {
     content: {
         text: string;
         metadata: LandPlotMetadata;
@@ -143,6 +143,11 @@ export interface SearchSession {
     filters: Record<string, any>;
 }
 
+export interface QueryExtraction {
+    searchQuery: string;
+    // Add any other properties that might be part of the query extraction
+}
+
 // Zod schema for search metadata
 export const SearchMetadataSchema = z.object({
     searchText: z.string(),
@@ -182,6 +187,27 @@ export const SearchMetadataSchema = z.object({
 });
 
 export type SearchMetadata = z.infer<typeof SearchMetadataSchema>;
+
+export enum OrderByParameter {
+    Largest = 'largest',
+    Smallest = 'smallest',
+    Cheapest = 'cheapest',
+    MostExpensive = 'mostExpensive',
+    Tallest = 'tallest',
+    Shortest = 'shortest',
+    ClosestToOcean = 'closestToOcean',
+    ClosestToBay = 'closestToBay',
+    None = 'none'
+}
+
+// Schema for the query extraction result
+export const QueryExtractionSchema = z.object({
+    searchQuery: z.string(),
+    orderByParameter: z.nativeEnum(OrderByParameter),
+    salesOnly: z.boolean()
+});
+
+export type QueryExtractionResult = z.infer<typeof QueryExtractionSchema>;
 
 // Constants
 export const AGENT_ID: `${string}-${string}-${string}-${string}-${string}` = '1459b245-2171-02f6-b436-c3c2641848e5';

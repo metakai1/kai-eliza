@@ -8,7 +8,8 @@ import { LandPlotMemory,
     PlotSize,
     BuildingType,
     DistanceCategory,
-    LAND_TABLE
+    LAND_TABLE,
+    OrderByParameter
 } from "../types";
 import { LAND_ROOM_ID, LAND_AGENT_ID, AGENT_ID } from "../types";
 import { v4 as uuidv4 } from 'uuid';
@@ -95,7 +96,10 @@ export class LandMemorySystem {
         const results = await this.dataProvider.searchLandByMetadata(searchParams);
         return results;
     }
-
+    async searchPropertiesByParamsV2(searchParams: Partial<LandSearchParams> = {}, orderBy?: OrderByParameter): Promise<LandPlotMemory[]> {
+        const results = await this.dataProvider.searchLandByMetadataV2(searchParams, orderBy);
+        return results;
+    }
     async mockSearchPropertiesByParams(searchParams: Partial<LandSearchParams> = {}): Promise<LandPlotMemory[]> {
         const mockProperty: LandPlotMemory = {
             id: '94e9f251-1ec7-0bde-b9cc-0fffa695eebf',

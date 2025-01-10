@@ -7,7 +7,8 @@ import {
     LAND_TABLE,
     LAND_ROOM_ID,
     LAND_AGENT_ID,
-    DEFAULT_MATCH_THRESHOLD
+    DEFAULT_MATCH_THRESHOLD,
+    OrderByParameter
 } from "../types";
 
 const LAND_MEMORY_TYPE = 'land_plot';
@@ -52,7 +53,6 @@ export class LandDatabaseAdapter {
     async removeAllLandMemories(roomId: UUID): Promise<void> {
         await this.dbAdapter.removeAllMemories(roomId, LAND_MEMORY_TYPE, LAND_TABLE);
     } */
-
     async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
         let sql = `
             SELECT * FROM ${LAND_TABLE}
@@ -166,6 +166,165 @@ export class LandDatabaseAdapter {
         }
     }
 
+    async searchLandByMetadataV2(params: LandSearchParams, orderBy?: OrderByParameter): Promise<LandPlotMemory[]> {
+        let sql = `
+            SELECT * FROM ${LAND_TABLE}
+            WHERE type = $1
+            AND content IS NOT NULL
+        `;
+        const values: any[] = [LAND_MEMORY_TYPE];
+        let paramCount = 1;
+
+        // Add names condition
+        if (params.names?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'name' = ANY($${paramCount}::text[])`;
+            values.push(params.names);
+        }
+
+        if (params.neighborhoods?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'neighborhood' = ANY($${paramCount}::text[])`;
+            values.push(params.neighborhoods);
+        }
+
+        if (params.zoningTypes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'zoning' = ANY($${paramCount}::text[])`;
+            values.push(params.zoningTypes);
+        }
+
+        if (params.plotSizes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'plotSize' = ANY($${paramCount}::text[])`;
+            values.push(params.plotSizes);
+        }
+
+        if (params.buildingTypes?.length) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'buildingType' = ANY($${paramCount}::text[])`;
+            values.push(params.buildingTypes);
+        }
+
+        if (params.distances?.ocean) {
+            if (params.distances.ocean.maxMeters) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'distances'->'ocean'->>'meters')::int <= $${paramCount}`;
+                values.push(params.distances.ocean.maxMeters);
+            }
+            if (params.distances.ocean.category) {
+                paramCount++;
+                sql += ` AND content->'metadata'->'distances'->'ocean'->>'category' = $${paramCount}`;
+                values.push(params.distances.ocean.category);
+            }
+        }
+
+        if (params.distances?.bay) {
+            if (params.distances.bay.maxMeters) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'distances'->'bay'->>'meters')::int <= $${paramCount}`;
+                values.push(params.distances.bay.maxMeters);
+            }
+            if (params.distances.bay.category) {
+                paramCount++;
+                sql += ` AND content->'metadata'->'distances'->'bay'->>'category' = $${paramCount}`;
+                values.push(params.distances.bay.category);
+            }
+        }
+
+        if (params.building?.floors) {
+            if (params.building.floors.min) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'floors'->>'min')::int >= $${paramCount}`;
+                values.push(params.building.floors.min);
+            }
+            if (params.building.floors.max) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'floors'->>'max')::int <= $${paramCount}`;
+                values.push(params.building.floors.max);
+            }
+        }
+
+        if (params.building?.height) {
+            if (params.building.height.min) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'height'->>'min')::int >= $${paramCount}`;
+                values.push(params.building.height.min);
+            }
+            if (params.building.height.max) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->'building'->'height'->>'max')::int <= $${paramCount}`;
+                values.push(params.building.height.max);
+            }
+        }
+
+        if (params.rarity?.rankRange) {
+            if (params.rarity.rankRange.min) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->>'rank')::int >= $${paramCount}`;
+                values.push(params.rarity.rankRange.min);
+            }
+            if (params.rarity.rankRange.max) {
+                paramCount++;
+                sql += ` AND (content->'metadata'->>'rank')::int <= $${paramCount}`;
+                values.push(params.rarity.rankRange.max);
+            }
+        }
+
+        // Add tokenId search condition
+        if (params.tokenId) {
+            paramCount++;
+            sql += ` AND content->'metadata'->>'tokenId' = $${paramCount}`;
+            values.push(params.tokenId);
+        }
+
+        // Add ORDER BY clause based on orderBy parameter
+        if (orderBy) {
+            console.log("ORDER BY", orderBy);
+            switch (orderBy) {
+                case OrderByParameter.Largest:
+                    sql += ` ORDER BY (content->'metadata'->'plotArea')::float DESC NULLS LAST`;
+                    break;
+                case OrderByParameter.Smallest:
+                    sql += ` ORDER BY (content->'metadata'->'plotArea')::float ASC NULLS LAST`;
+                    break;
+                case OrderByParameter.Cheapest:
+                    sql += ` ORDER BY (content->'metadata'->'nftData'->'price')::float ASC NULLS LAST`;
+                    break;
+                case OrderByParameter.MostExpensive:
+                    sql += ` ORDER BY (content->'metadata'->'nftData'->'price')::float DESC NULLS LAST`;
+                    break;
+                case OrderByParameter.Tallest:
+                    sql += ` ORDER BY (content->'metadata'->'building'->'height'->>'max')::int DESC NULLS LAST`;
+                    break;
+                case OrderByParameter.Shortest:
+                    sql += ` ORDER BY (content->'metadata'->'building'->'height'->>'max')::int ASC NULLS LAST`;
+                    break;
+                case OrderByParameter.ClosestToOcean:
+                    sql += ` ORDER BY (content->'metadata'->'distances'->'ocean'->>'meters')::int ASC`;
+                    break;
+                case OrderByParameter.ClosestToBay:
+                    sql += ` ORDER BY (content->'metadata'->'distances'->'bay'->>'meters')::int ASC`;
+                    break;
+            }
+        }
+
+        sql += ` LIMIT 100`;  // Add a reasonable limit
+
+        try {
+            const { rows } = await (this.dbAdapter as PostgresDatabaseAdapter).query(sql, values);
+            return rows.map(row => ({
+                ...row,
+                content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content
+            }));
+        } catch (error) {
+            elizaLogger.error('Error in searchLandByMetadataV2:', {
+                error: error instanceof Error ? error.message : String(error),
+                params
+            });
+            throw error;
+        }
+    }
 
     async getPropertiesByRarityRange(
         minRank: number,

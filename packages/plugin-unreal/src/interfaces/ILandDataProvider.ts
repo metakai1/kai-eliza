@@ -1,4 +1,4 @@
-import { LandPlotMemory, LandSearchParams } from '../types';
+import { LandPlotMemory, LandSearchParams, OrderByParameter } from '../types';
 import { UUID } from '@ai16z/eliza';
 
 export interface ILandDataProvider {
@@ -7,4 +7,5 @@ export interface ILandDataProvider {
     //removeAllLandMemories(roomId: UUID): Promise<void>;
     updateLandMemory(memory: LandPlotMemory): Promise<void>;
     searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]>;
+    searchLandByMetadataV2(params: LandSearchParams, orderBy?: OrderByParameter): Promise<LandPlotMemory[]>;
 }

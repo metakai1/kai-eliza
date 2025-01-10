@@ -1,6 +1,6 @@
 import { LandDatabaseAdapter } from '../database/land_database_adapter';
 import { ILandDataProvider } from '../interfaces/ILandDataProvider';
-import { LandPlotMemory, LandSearchParams } from '../types';
+import { LandPlotMemory, LandSearchParams, OrderByParameter } from '../types';
 import { UUID } from '@ai16z/eliza';
 
 export class PostgresLandDataProvider implements ILandDataProvider {
@@ -25,5 +25,9 @@ export class PostgresLandDataProvider implements ILandDataProvider {
 
     async searchLandByMetadata(params: LandSearchParams): Promise<LandPlotMemory[]> {
         return await this.dbAdapter.searchLandByMetadata(params);
+    }
+
+    async searchLandByMetadataV2(params: LandSearchParams, orderBy?: OrderByParameter): Promise<LandPlotMemory[]> {
+        return await this.dbAdapter.searchLandByMetadataV2(params, orderBy);
     }
 }

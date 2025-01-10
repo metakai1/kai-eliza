@@ -11,7 +11,7 @@ import * as path from "path";
 import { PropertySearchManager } from "./searchManager";
 //import { generateObjectV2 } from "@ai16z/eliza";
 import { LAND_QUERY_SYSTEM_PROMPT } from "./database/land_memory_system";
-import { LandPlotMemory, SearchMetadataSchema } from "./types";
+import { LandPlotMemory, SearchMetadataSchema, QueryExtractionSchema, OrderByParameter } from "./types";
 import { z } from "zod";
 
 export const processPropertySearch: Action = {
@@ -107,7 +107,7 @@ export const processPropertySearch: Action = {
         // read from file
         const promptDir = path.join(process.cwd(), 'prompts');
         const landPromptFile = path.join(promptDir, 'land_query_prompt.txt');
-        const queryPromptFile = path.join(promptDir, 'query_extraction_prompt.txt');
+        const queryPromptFile = path.join(promptDir, 'query_extraction_promptV2.txt');
 
         const searchManager = new PropertySearchManager(runtime);
 
@@ -134,18 +134,25 @@ export const processPropertySearch: Action = {
             template: QUERY_EXTRACTION_SYSTEM_PROMPT,
         });
 
-        //console.log("Composed context:", context);
+        console.log("Query extraction context:", context);
 
-        const searchQuery = await generateText({
+        const queryExtraction = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
+            schema: QueryExtractionSchema,
         });
 
-        console.log("Generated search query:", searchQuery);
+        if (!queryExtraction?.object) {
+            throw new Error('Failed to generate query extraction');
+        }
+
+        console.log("Generated query extraction:", queryExtraction.object);
+
+        const landSearchQuery =  (queryExtraction.object as z.infer<typeof QueryExtractionSchema>).searchQuery;
 
         callback({
-            text: 'Asking ATLAS: ' + searchQuery
+            text: 'Asking ATLAS: ' + landSearchQuery
         });
 
         const FILE_LAND_QUERY_SYSTEM_PROMPT = fs.readFileSync(
@@ -153,7 +160,7 @@ export const processPropertySearch: Action = {
             'utf-8'
         );
 
-        const landQueryContext = FILE_LAND_QUERY_SYSTEM_PROMPT + searchQuery;
+        const landQueryContext = FILE_LAND_QUERY_SYSTEM_PROMPT + landSearchQuery;
 
         //console.log("Land query context:", landQueryContext);
 
@@ -170,19 +177,33 @@ export const processPropertySearch: Action = {
 
         console.log("Generated search metadata object: ", metadataResult.object);
 
-        // Execute search
-        const results = await searchManager.executeSearch(metadataResult.object);
+        // Execute search using V2
+        const results = await searchManager.executeSearchV2(metadataResult.object, queryExtraction.object);
 
-        if (!!results) {
-            await searchManager.updateSearchResults(message.userId, results);
-        };
+        if (!results) {
+            throw new Error('No search results returned');
+        }
+
+        // Sort results to prioritize properties with NFT prices
+        const sortedResults = results.sort((a, b) => {
+                const priceA = a.content.metadata.nftData?.price;
+                const priceB = b.content.metadata.nftData?.price;
+
+                if (priceA && !priceB) return -1;
+                if (!priceA && priceB) return 1;
+            if (!priceA && !priceB) return 0;
+            return (priceA || 0) - (priceB || 0);
+        });
+
+        if (sortedResults.length > 0) {
+            await searchManager.updateSearchResults(message.userId, sortedResults);
+        }
 
         // log the names of the properties in results.content.metadata.name
-        // separated by a space and a comma
-        console.log("Search results names:", results.map((result) => result.content.metadata.name).join(", "));
+        console.log("Search results names:", sortedResults.map((result) => result.content.metadata.name).join(", "));
 
         // Format response
-        const formattedResponse = formatSearchResults(results);
+        const formattedResponse = formatSearchResults(sortedResults);
 
         callback({
             text: formattedResponse
@@ -213,7 +234,13 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
 
     landMemories.slice(0, 10).forEach(property => {
         const metadata = property.content.metadata;
-        response += `${metadata.name} in ${metadata.neighborhood}: ${metadata.zoning}  \n`;
+        const nftData = metadata.nftData;
+
+        response += `${metadata.name} in ${metadata.neighborhood}: ${metadata.zoning} `;
+        if (nftData?.price) {
+            response += `💎 Price: ${nftData.price} ETH`;
+        }
+        response += '\n';
         response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)  ${metadata.buildingType} `;
         response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}`;
         response += `  |  Distance To Ocean: ${metadata.distances.ocean.meters}m (${metadata.distances.ocean.category}) `;
