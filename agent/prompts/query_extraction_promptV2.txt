@@ -11,10 +11,17 @@ Output your analysis as a JSON object with the following fields:
 - orderByParameter: One of [largest, smallest, cheapest, mostExpensive, tallest, shortest, closestToOcean, closestToBay, none]
 - salesOnly: true if the user is specifically looking for properties that are for sale/available to buy
 
-IMPORTANT:  Use the most recent user message to generate the search query and ordering preferences.
+IMPORTANT:  Primarily Use the CURRENT_MESSAGE to generate the search query and ordering preferences.
+If further context is needed, use RECENT_MESSAGES to infer the search query.  Use message timestamps to determine the most recent messages.
+for examples of multi part queries, see the #MULTI-PART QUERIES section below.
 
-Recent Messages:
-{{recentMessages}}
+CURRENT_MESSAGE:
+{{{thisMessage}}}
+
+RECENT_MESSAGES:
+{{#each recentMessagesData}}
+- {{this.createdAt}}: {{{this.content.text}}}
+{{/each}}
 
 #EXAMPLES of valid responses:
 For "Show me the largest plots in Space Mind":
@@ -67,8 +74,68 @@ For "Which plots in TG/LM are at least Micro in size?":
     "orderByParameter": "largest",
     "salesOnly": false
 }
+#MULTI-PART QUERIES:
+You may have to infer a search query from RECENT_MESSAGES. The user may ask follow up questions to an existing query.
+In such cases, you will need to check the RECENT_MESSAGES and parse the time stamp to figure out the information that the user is asking for.
 
+#MULTI-PART QUERIES EXAMPLES:
+For "CURRENT_MESSAGE: which are for sale?
+     RECENT_MESSAGES: what are properties in Space Mind near the ocean?"
+{
+    "searchQuery": "Which Space Mind properties near the ocean are for sale?",
+    "orderByParameter": "none",
+    "salesOnly": true
+}
+For "CURRENT_MESSAGE: show me the small ones
+     RECENT_MESSAGES: what properties are available in North Star?"
+{
+    "searchQuery": "What small properties are available in North Star?",
+    "orderByParameter": "smallest",
+    "salesOnly": false
+}
+For "CURRENT_MESSAGE: which ones are cheapest?
+     RECENT_MESSAGES: which ones are near the bay
+     (next recent timestamp) what's available in Space Mind?"
+{
+    "searchQuery": "What are the cheapest Space Mind properties near the bay?",
+    "orderByParameter": "cheapest",
+    "salesOnly": false
+}
+
+For "CURRENT_MESSAGE: what are there any under 2 ETH?
+     RECENT_MESSAGES: show me the large plots
+     (older timestamp) what's for sale in North Star?"
+{
+    "searchQuery": "What large plots are for sale in North Star under 2 ETH?",
+    "orderByParameter": "cheapest",
+    "salesOnly": true
+}
+# MULTI-PART QUERIES should reset to the most recent message if the user starts a new search topic.
+For "CURRENT_MESSAGE: what are some good buys in Flashing Lights
+     RECENT_MESSAGES: which ones are close to the bay
+     (next recent timestamp) what are some large properties in Space Mind"
+{
+    "searchQuery": "what are some good buys in Flashing Lights",
+    "orderByParameter": "cheapest",
+    "salesOnly": true
+}
+For "CURRENT_MESSAGE: what's for sale in Little Meow?
+     RECENT_MESSAGES: which ones are for sale?
+     (next recent timestamp) show me large properties in Nexus"
+{
+    "searchQuery": "what's for sale in Little Meow?",
+    "orderByParameter": "none",
+    "salesOnly": true
+}
+For "CURRENT_MESSAGE: show me all properties for sale
+     RECENT_MESSAGES: show me all properties for sale in space mind"
+{
+    "searchQuery": "show me all properties for sale",
+    "orderByParameter": "none",
+    "salesOnly": true
+}
 #GUIDELINES for Analysis:
+If you are unsure of what search query to generate, default to using the CURRENT_MESSAGE to infer the search query.
 
 1. Order Parameter Detection:
 - "largest", "biggest" -> largest
@@ -82,9 +149,9 @@ For "Which plots in TG/LM are at least Micro in size?":
 - If no ordering mentioned -> none
 
 2. Sales Only Detection (true if):
-- User mentions "buy", "purchase", "for sale", "available", "price", "cost"
+- User mentions "buy", "purchase", "for sale", "available", "price", "cost", "what's available"
 - User asks about "listings" or "market"
-- User specifically asks about NFT prices or availability
+- User specifically asks about prices or availability
 
 #For reference, here are COMMON ABBREVIATIONS, NEIGHBORHOODS, AND ZONING TYPES:
 **1. Property Attributes**
@@ -99,3 +166,4 @@ For "Which plots in TG/LM are at least Micro in size?":
   - **Zoning Types**: `Legendary, Mixed Use, Industrial, Residential, Commercial`
 - **Plot Sizes**: `Nano, Micro, Macro, Mid, Mega, Mammoth, Giga`
 - **Building Types**: `Lowrise, Highrise, Tall, Megatall`
+

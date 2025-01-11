@@ -1,0 +1,24 @@
+TO DO for Dec 11:
+
+- remove sort by cheapest and most expensive queries from
+  database search ->  no price data is stored in database.
+
+- add price sorting function to executeSearchV2
+
+- debug system query prompt for follow-up queries
+
+- review main system prompt for better compatibiity with new search
+  strategy
+
+
+- investigate search session enhancements to allow better
+  stateful search capabilities by storing and operating on previous results
+
+- test more use cases
+
+- queries such as cheapest/most expensive, etc. should have forSale set to true
+
+- handle case where user asks for which properties are forsale (metadata is empty)
+
+- filter incoming messages by user id to save tokens
+

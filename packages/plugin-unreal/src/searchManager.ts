@@ -229,7 +229,12 @@ export class PropertySearchManager {
 
         // Return null if no search parameters were defined
         if (Object.keys(searchParams).length === 0) {
-            return null;
+            // set search parameters to all property types
+            searchParams.zoningTypes = [ZoningType.Residential,
+                ZoningType.Commercial,
+                ZoningType.Industrial,
+                ZoningType.Mixed,
+                ZoningType.Legendary];
         }
 
         console.log('Search parameters:', searchParams);
@@ -274,7 +279,11 @@ export class PropertySearchManager {
                     result.content?.metadata?.nftData?.price !== undefined &&
                     result.content?.metadata?.nftData?.price > 0
                 );
+
+                // sort enrichedResults by price if o
             }
+
+
 
             return enrichedResults;
 

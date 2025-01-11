@@ -288,12 +288,6 @@ export class LandDatabaseAdapter {
                 case OrderByParameter.Smallest:
                     sql += ` ORDER BY (content->'metadata'->'plotArea')::float ASC NULLS LAST`;
                     break;
-                case OrderByParameter.Cheapest:
-                    sql += ` ORDER BY (content->'metadata'->'nftData'->'price')::float ASC NULLS LAST`;
-                    break;
-                case OrderByParameter.MostExpensive:
-                    sql += ` ORDER BY (content->'metadata'->'nftData'->'price')::float DESC NULLS LAST`;
-                    break;
                 case OrderByParameter.Tallest:
                     sql += ` ORDER BY (content->'metadata'->'building'->'height'->>'max')::int DESC NULLS LAST`;
                     break;
@@ -309,7 +303,7 @@ export class LandDatabaseAdapter {
             }
         }
 
-        sql += ` LIMIT 100`;  // Add a reasonable limit
+        sql += ` LIMIT 4444`;  // Add a reasonable limit
 
         try {
             const { rows } = await (this.dbAdapter as PostgresDatabaseAdapter).query(sql, values);

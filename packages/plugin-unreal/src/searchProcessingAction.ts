@@ -7,6 +7,7 @@ import { Action, IAgentRuntime, Memory, State,
 } from "@ai16z/eliza";
 import * as fs from "fs";
 import * as path from "path";
+import util from 'util';
 
 import { PropertySearchManager } from "./searchManager";
 //import { generateObjectV2 } from "@ai16z/eliza";
@@ -111,27 +112,46 @@ export const processPropertySearch: Action = {
 
         const searchManager = new PropertySearchManager(runtime);
 
+        logMessageContent(message);
+
+        callback({
+            text: 'Processing query...'
+        });
+
         const QUERY_EXTRACTION_SYSTEM_PROMPT = fs.readFileSync(
             queryPromptFile,
             'utf-8'
         );
 
-        // TODO: parse recent messages to filter out very long messages
         const recentMessages = await runtime.messageManager.getMemories({
             roomId: message.roomId,
-            count: 6,
+            count: 10,
         });
-        // iterate through recentMessages and filter out very long messages
+
+        // deprecated: iterate through recentMessages and filter out very long messages
         const filteredRecentMessages = recentMessages.filter((msg) =>
             msg.content.text.length <= 1000);
 
-        // add filtered recent messages to context
+        //console.log("Filtered recent messages:", filteredRecentMessages);
+
+        // filter out messages that are not from this userID
+        const filteredRecentMessagesFromUser = filteredRecentMessages.filter((msg) =>
+            msg.userId === message.userId
+        );
+
+        // for each filteredRecentMessagesFromUser, call logMessageContent
+        filteredRecentMessagesFromUser.forEach((msg) => {
+            logMessageText(msg);
+        })
+
         const context = composeContext({
             state: {
                 ...state,
-                recentMessagesData: filteredRecentMessages
+                thisMessage: message.content.text,
+                recentMessagesData: filteredRecentMessagesFromUser
             },
             template: QUERY_EXTRACTION_SYSTEM_PROMPT,
+            templatingEngine: "handlebars",
         });
 
         console.log("Query extraction context:", context);
@@ -147,9 +167,11 @@ export const processPropertySearch: Action = {
             throw new Error('Failed to generate query extraction');
         }
 
-        console.log("Generated query extraction:", queryExtraction.object);
 
-        const landSearchQuery =  (queryExtraction.object as z.infer<typeof QueryExtractionSchema>).searchQuery;
+        const queryObject = queryExtraction.object as z.infer<typeof QueryExtractionSchema>;
+        const landSearchQuery =  queryObject.searchQuery;
+
+        console.log("Generated query extraction Object:", queryObject);
 
         callback({
             text: 'Asking ATLAS: ' + landSearchQuery
@@ -230,9 +252,9 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
         return "I couldn't find any properties matching your criteria. Would you like to try a different search?";
     }
 
-    let response = `I found ${landMemories.length} properties matching your criteria: (first 10 shown)\n\n`;
+    let response = `I found ${landMemories.length} properties matching your criteria: (up to 20 shown)\n\n`;
 
-    landMemories.slice(0, 10).forEach(property => {
+    landMemories.slice(0, 20).forEach(property => {
         const metadata = property.content.metadata;
         const nftData = metadata.nftData;
 
@@ -249,10 +271,29 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
     return response;
 }
 
-        // Generate search metadata using LLM
-/*          const searchMetadata = (await generateObjectV2({
-            runtime,
-            context,
-            modelClass: ModelClass.LARGE,
-            schema: SearchMetadataSchema,
-        })) as z.infer<typeof SearchMetadataSchema>; */
+
+// Function to pretty print message content with proper indentation and formatting
+function logMessageContent(message: Memory) {
+    console.log('\n=== Message Details ===');
+    console.log('ID:', message.id);
+    console.log('User ID:', message.userId);
+    console.log('\n=== Message Content ===');
+    if (message.content) {
+        const prettyContent = util.inspect(message.content, {
+            colors: true,
+            depth: null,
+            maxArrayLength: null,
+            compact: false,
+            breakLength: 80
+        });
+        console.log(prettyContent);
+    } else {
+        console.log('No content available');
+    }
+
+    console.log('\n=== End Message Details ===\n');
+}
+
+function logMessageText(message: Memory) {
+    console.log('\n=== Message Text: ', message.content.text, ' ===');
+}
