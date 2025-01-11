@@ -279,11 +279,23 @@ export class PropertySearchManager {
                     result.content?.metadata?.nftData?.price !== undefined &&
                     result.content?.metadata?.nftData?.price > 0
                 );
-
-                // sort enrichedResults by price if o
             }
 
+            // If no specific ordering is requested, prioritize results with NFT price data
+            if (!queryExtraction?.orderByParameter) {
+                enrichedResults.sort((a, b) => {
+                    const priceA = a.content.metadata.nftData?.price;
+                    const priceB = b.content.metadata.nftData?.price;
 
+                    // First prioritize items with prices over those without
+                    if (priceA && !priceB) return -1;
+                    if (!priceA && priceB) return 1;
+                    if (!priceA && !priceB) return 0;
+
+                    // Then sort by price ascending
+                    return (priceA || 0) - (priceB || 0);
+                });
+            }
 
             return enrichedResults;
 

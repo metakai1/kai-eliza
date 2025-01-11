@@ -258,7 +258,7 @@ export class LandDatabaseAdapter {
             }
         }
 
-        if (params.rarity?.rankRange) {
+/*         if (params.rarity?.rankRange) {
             if (params.rarity.rankRange.min) {
                 paramCount++;
                 sql += ` AND (content->'metadata'->>'rank')::int >= $${paramCount}`;
@@ -269,7 +269,7 @@ export class LandDatabaseAdapter {
                 sql += ` AND (content->'metadata'->>'rank')::int <= $${paramCount}`;
                 values.push(params.rarity.rankRange.max);
             }
-        }
+        } */
 
         // Add tokenId search condition
         if (params.tokenId) {
@@ -299,6 +299,9 @@ export class LandDatabaseAdapter {
                     break;
                 case OrderByParameter.ClosestToBay:
                     sql += ` ORDER BY (content->'metadata'->'distances'->'bay'->>'meters')::int ASC`;
+                    break;
+                case OrderByParameter.Rarest:
+                    sql += ` ORDER BY (content->'metadata'->'nftData'->>'rank')::int ASC`;
                     break;
             }
         }

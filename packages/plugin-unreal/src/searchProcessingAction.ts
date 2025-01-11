@@ -206,26 +206,15 @@ export const processPropertySearch: Action = {
             throw new Error('No search results returned');
         }
 
-        // Sort results to prioritize properties with NFT prices
-        const sortedResults = results.sort((a, b) => {
-                const priceA = a.content.metadata.nftData?.price;
-                const priceB = b.content.metadata.nftData?.price;
-
-                if (priceA && !priceB) return -1;
-                if (!priceA && priceB) return 1;
-            if (!priceA && !priceB) return 0;
-            return (priceA || 0) - (priceB || 0);
-        });
-
-        if (sortedResults.length > 0) {
-            await searchManager.updateSearchResults(message.userId, sortedResults);
+        if (results.length > 0) {
+            await searchManager.updateSearchResults(message.userId, results);
         }
 
         // log the names of the properties in results.content.metadata.name
-        console.log("Search results names:", sortedResults.map((result) => result.content.metadata.name).join(", "));
+        console.log("Search results names:", results.map((result) => result.content.metadata.name).join(", "));
 
         // Format response
-        const formattedResponse = formatSearchResults(sortedResults);
+        const formattedResponse = formatSearchResults(results);
 
         callback({
             text: formattedResponse
@@ -262,6 +251,7 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
         if (nftData?.price) {
             response += `💎 Price: ${nftData.price} ETH`;
         }
+        response += ` Rank ${metadata.rank} `;
         response += '\n';
         response += `- Plot size: ${metadata.plotSize} (${metadata.plotArea}m²)  ${metadata.buildingType} `;
         response += `  |  Floors: ${metadata.building.floors.min}-${metadata.building.floors.max}`;

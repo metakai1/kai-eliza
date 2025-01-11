@@ -197,6 +197,7 @@ export enum OrderByParameter {
     Shortest = 'shortest',
     ClosestToOcean = 'closestToOcean',
     ClosestToBay = 'closestToBay',
+    Rarest = 'rarest',
     None = 'none'
 }
 

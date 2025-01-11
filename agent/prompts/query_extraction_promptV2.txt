@@ -8,7 +8,7 @@ From the recent messages given below, analyze the most recent relevant message t
 
 Output your analysis as a JSON object with the following fields:
 - searchQuery: A single line of text representing the search query
-- orderByParameter: One of [largest, smallest, cheapest, mostExpensive, tallest, shortest, closestToOcean, closestToBay, none]
+- orderByParameter: One of [largest, smallest, cheapest, mostExpensive, tallest, shortest, closestToOcean, closestToBay, rarity, none]
 - salesOnly: true if the user is specifically looking for properties that are for sale/available to buy
 
 IMPORTANT:  Primarily Use the CURRENT_MESSAGE to generate the search query and ordering preferences.
@@ -72,6 +72,12 @@ For "Which plots in TG/LM are at least Micro in size?":
 {
     "searchQuery": "Which plots in TG/LM are at least Micro in size?",
     "orderByParameter": "largest",
+    "salesOnly": false
+}
+For "what rare plots in LM are for sale?":
+{
+    "searchQuery": "what rare plots in LM are for sale?",
+    "orderByParameter": "rarest",
     "salesOnly": false
 }
 #MULTI-PART QUERIES:
@@ -146,6 +152,7 @@ If you are unsure of what search query to generate, default to using the CURRENT
 - "shortest", "lowest" -> shortest
 - "closest to ocean", "nearest to ocean" -> closestToOcean
 - "closest to bay", "nearest to bay" -> closestToBay
+- "rare", "rarest" -> rarest
 - If no ordering mentioned -> none
 
 2. Sales Only Detection (true if):
