@@ -108,7 +108,7 @@ export const processPropertySearch: Action = {
         // read from file
         const promptDir = path.join(process.cwd(), 'prompts');
         const landPromptFile = path.join(promptDir, 'land_query_prompt.txt');
-        const queryPromptFile = path.join(promptDir, 'query_extraction_promptV2.txt');
+        const queryPromptFile = path.join(promptDir, 'query_extraction_promptV3.txt');
 
         const searchManager = new PropertySearchManager(runtime);
 
@@ -154,12 +154,12 @@ export const processPropertySearch: Action = {
             templatingEngine: "handlebars",
         });
 
-        console.log("Query extraction context:", context);
+        //console.log("Query extraction context:", context);
 
         const queryExtraction = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: QueryExtractionSchema,
         });
 
@@ -202,7 +202,7 @@ export const processPropertySearch: Action = {
         // Execute search using V2
         const results = await searchManager.executeSearchV2(metadataResult.object, queryExtraction.object);
 
-        if (!results) {
+        if (results.length === 0) {
             throw new Error('No search results returned');
         }
 
@@ -241,9 +241,9 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
         return "I couldn't find any properties matching your criteria. Would you like to try a different search?";
     }
 
-    let response = `I found ${landMemories.length} properties matching your criteria: (up to 20 shown)\n\n`;
+    let response = `I found ${landMemories.length} properties matching your criteria: (up to 7 shown)\n\n`;
 
-    landMemories.slice(0, 20).forEach(property => {
+    landMemories.slice(0, 7).forEach(property => {
         const metadata = property.content.metadata;
         const nftData = metadata.nftData;
 
@@ -264,7 +264,7 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
 
 // Function to pretty print message content with proper indentation and formatting
 function logMessageContent(message: Memory) {
-    console.log('\n=== Message Details ===');
+    console.log('\n==== Message Details ====');
     console.log('ID:', message.id);
     console.log('User ID:', message.userId);
     console.log('\n=== Message Content ===');
@@ -281,9 +281,9 @@ function logMessageContent(message: Memory) {
         console.log('No content available');
     }
 
-    console.log('\n=== End Message Details ===\n');
+    console.log('==== End Message Details ====\n');
 }
 
 function logMessageText(message: Memory) {
-    console.log('\n=== Message Text: ', message.content.text, ' ===');
+    console.log('=== Message Text: ', message.content.text, ' ===');
 }

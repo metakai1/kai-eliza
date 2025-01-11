@@ -242,6 +242,8 @@ export class PropertySearchManager {
     }
 
     async executeSearchV2(searchMetadata: SearchMetadata, queryExtraction?: QueryExtractionResult): Promise<LandPlotMemoryNFT[]> {
+        console.log("executeSearchV2 called with queryExtraction:", JSON.stringify(queryExtraction, null, 2));
+
         // First get base results using existing search with ordering
         const results = await this.executeSearchWithOrdering(searchMetadata, queryExtraction?.orderByParameter) as LandPlotMemory[];
 
@@ -262,7 +264,7 @@ export class PropertySearchManager {
             // Create price lookup map
             const priceMap = new Map(nftPrices.map(nft => [nft.tokenId, nft.price]));
 
-            const enrichedResults = results.map(result => {
+            let enrichedResults = results.map(result => {
                 const tokenId = result.content.metadata.tokenId;
                 if (tokenId && priceMap.has(tokenId)) {
                     result.content.metadata.nftData = {
@@ -273,11 +275,22 @@ export class PropertySearchManager {
                 return result as LandPlotMemoryNFT;
             });
 
+            console.log("enrichedResults length: ", enrichedResults.length);
+
             // filter enrichedResults to remove properties that are not for sale if salesOnly is true
             if (queryExtraction?.salesOnly) {
-                return enrichedResults.filter(result =>
+                enrichedResults = enrichedResults.filter(result =>
                     result.content?.metadata?.nftData?.price !== undefined &&
                     result.content?.metadata?.nftData?.price > 0
+                );
+            }
+
+            // remove all properties above maxPrice if maxPrice is set
+            if (queryExtraction?.maxPrice) {
+                console.log("maxPrice: ", queryExtraction.maxPrice);
+                enrichedResults = enrichedResults.filter(result =>
+                    result.content?.metadata?.nftData?.price !== undefined &&
+                    result.content?.metadata?.nftData?.price <= queryExtraction.maxPrice
                 );
             }
 
@@ -294,6 +307,22 @@ export class PropertySearchManager {
 
                     // Then sort by price ascending
                     return (priceA || 0) - (priceB || 0);
+                });
+            }
+
+            // if orderByParameter is cheapest, sort by price ascending
+            if (queryExtraction?.orderByParameter === OrderByParameter.Cheapest) {
+                enrichedResults.sort((a, b) => {
+                    const priceA = a.content.metadata.nftData?.price;
+                    const priceB = b.content.metadata.nftData?.price;
+
+                    // Put undefined prices at the end
+                    if (priceA === undefined && priceB === undefined) return 0;
+                    if (priceA === undefined) return 1;
+                    if (priceB === undefined) return -1;
+
+                    // Sort by price when both are defined
+                    return priceA - priceB;
                 });
             }
 

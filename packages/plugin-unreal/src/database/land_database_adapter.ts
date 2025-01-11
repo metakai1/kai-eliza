@@ -1,6 +1,6 @@
 import { IDatabaseAdapter } from "@ai16z/eliza";
 import { elizaLogger, UUID } from "@ai16z/eliza";
-import PostgresDatabaseAdapter from "@ai16z/adapter-postgres";
+import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
 import {
     LandPlotMemory,
     LandSearchParams,
@@ -152,7 +152,7 @@ export class LandDatabaseAdapter {
         }
 
         try {
-            const { rows } = await (this.dbAdapter as PostgresDatabaseAdapter).query(sql, values);
+            const { rows } = await (this.dbAdapter as InstanceType<typeof PostgresDatabaseAdapter>).query(sql, values);
             return rows.map(row => ({
                 ...row,
                 content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content
@@ -309,7 +309,7 @@ export class LandDatabaseAdapter {
         sql += ` LIMIT 4444`;  // Add a reasonable limit
 
         try {
-            const { rows } = await (this.dbAdapter as PostgresDatabaseAdapter).query(sql, values);
+            const { rows } = await (this.dbAdapter as InstanceType<typeof PostgresDatabaseAdapter>).query(sql, values);
             return rows.map(row => ({
                 ...row,
                 content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content

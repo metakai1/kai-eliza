@@ -205,7 +205,8 @@ export enum OrderByParameter {
 export const QueryExtractionSchema = z.object({
     searchQuery: z.string(),
     orderByParameter: z.nativeEnum(OrderByParameter),
-    salesOnly: z.boolean()
+    salesOnly: z.boolean(),
+    maxPrice: z.number().optional()
 });
 
 export type QueryExtractionResult = z.infer<typeof QueryExtractionSchema>;

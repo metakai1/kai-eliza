@@ -6,6 +6,15 @@ import {
     type UUID,
 } from "./types.ts";
 
+const MAX_MESSAGE_LENGTH = 500; // Maximum length for each message
+
+function truncateMessage(message: string): string {
+    if (message.length <= MAX_MESSAGE_LENGTH) {
+        return message;
+    }
+    return message.substring(0, MAX_MESSAGE_LENGTH) + "... [truncated]";
+}
+
 /**
  * Get details for a list of actors.
  */
@@ -68,7 +77,7 @@ export const formatMessages = ({
         .reverse()
         .filter((message: Memory) => message.userId)
         .map((message: Memory) => {
-            const messageContent = (message.content as Content).text;
+            const messageContent = truncateMessage((message.content as Content).text || "");
             const messageAction = (message.content as Content).action;
             const formattedName =
                 actors.find((actor: Actor) => actor.id === message.userId)
