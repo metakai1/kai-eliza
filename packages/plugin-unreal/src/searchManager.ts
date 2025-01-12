@@ -326,6 +326,11 @@ export class PropertySearchManager {
                 });
             }
 
+            // if orderByParameter is cheapest, return the first 3 results
+            if (queryExtraction?.orderByParameter === OrderByParameter.Cheapest) {
+                enrichedResults = enrichedResults.slice(0, 3);
+            }
+
             return enrichedResults;
 
         } catch (error) {

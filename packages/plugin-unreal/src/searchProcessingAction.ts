@@ -3,7 +3,8 @@ import { Action, IAgentRuntime, Memory, State,
     composeContext,
     generateObject,
     generateText,
-    HandlerCallback
+    HandlerCallback,
+    formatEvaluatorExampleDescriptions
 } from "@ai16z/eliza";
 import * as fs from "fs";
 import * as path from "path";
@@ -203,7 +204,11 @@ export const processPropertySearch: Action = {
         const results = await searchManager.executeSearchV2(metadataResult.object, queryExtraction.object);
 
         if (results.length === 0) {
-            throw new Error('No search results returned');
+            callback({
+                text: 'Right now there are no properties matching your criteria, would you like to try a different search?'
+            })
+            return true;
+            //throw new Error('No search results returned');
         }
 
         if (results.length > 0) {
@@ -241,9 +246,9 @@ function formatSearchResults(landMemories: LandPlotMemory[]): string {
         return "I couldn't find any properties matching your criteria. Would you like to try a different search?";
     }
 
-    let response = `I found ${landMemories.length} properties matching your criteria: (up to 7 shown)\n\n`;
+    let response = `I found ${landMemories.length} properties matching your criteria: (up to 17 shown)\n\n`;
 
-    landMemories.slice(0, 7).forEach(property => {
+    landMemories.slice(0, 17).forEach(property => {
         const metadata = property.content.metadata;
         const nftData = metadata.nftData;
 
